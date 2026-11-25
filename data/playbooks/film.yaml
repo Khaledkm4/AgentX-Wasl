@@ -1,0 +1,23 @@
+sector: film
+typical_roles:
+  - {role: مخرج, phase: pre_production, importance: 1.0}
+  - {role: مدير تصوير, phase: production, importance: 0.9}
+  - {role: مهندس صوت, phase: production, importance: 0.8}
+  - {role: مونتير, phase: post_production, importance: 0.9}
+  - {role: باحث محتوى, phase: pre_production, importance: 0.6}
+  - {role: ملون ومصحح ألوان, phase: post_production, importance: 0.5}
+phases: [pre_production, production, post_production, distribution]
+permits:
+  - تصريح التصوير من هيئة الأفلام
+  - موافقة الجهات المحلية لمواقع التصوير
+commonly_forgotten_needs:
+  - {role: مهندس صوت, why: الصوت الرديء يُسقط الفيلم الوثائقي حتى مع صورة ممتازة}
+  - {role: باحث محتوى, why: الوثائقي يحتاج دقة تاريخية ومصادر موثقة}
+  - {role: مترجم ومعد ترجمة, why: المهرجانات تشترط ترجمة إنجليزية}
+# Critical-deadline rules: each permit must be secured `lead_days` before its anchor
+# (anchor = a phase start, or "show" = the official show / launch date)
+permit_rules:
+  - {permit: تصريح التصوير من هيئة الأفلام, en: Film Commission shooting permit, anchor: production, lead_days: 10,
+     purpose_ar: لبدء التصوير وإنهائه في الوقت المحدد, purpose_en: to start and finish shooting on schedule}
+  - {permit: موافقة الجهات المحلية لمواقع التصوير, en: Local authorities' location approval, anchor: production, lead_days: 5,
+     purpose_ar: لدخول مواقع التصوير دون تأخير, purpose_en: to access the shooting locations without delay}

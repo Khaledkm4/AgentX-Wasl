@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>وصل — الصندوق الثقافي</title>
+<link rel="preload" href="/static/assets/fonts/ibm-plex-sans-arabic-regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/static/assets/fonts/ibm-plex-sans-arabic-700.woff2" as="font" type="font/woff2" crossorigin>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  // Tokens extracted from the saved cdf.gov.sa page (.cache/cdf_ref)
+  tailwind.config = { theme: { extend: {
+    fontFamily: { sans: ['"IBM Plex Sans Arabic"', '"IBM Plex Sans"', 'sans-serif'] },
+    colors: {
+      ink: '#161616', ink2: '#1F2A37', sub: '#384250', muted: '#6C737F', line: '#E5E7EB', line2: '#D2D6DB',
+      canvas: '#F3F4F6', surface: '#FFFFFF', hover: '#E5E7EB',
+      brand: { DEFAULT: '#0D121C', dark: '#1F2A37', soft: '#F3F4F6' },
+      ok: { DEFAULT: '#1B8354', soft: '#ECF7F1' },
+      accent: { DEFAULT: '#8C6239', soft: '#F6EFE7' },
+      slate: { DEFAULT: '#4D5761', soft: '#F3F4F6' },
+      danger: { DEFAULT: '#B42318', soft: '#FEF3F2' }, warn: '#B42318'
+    }
+  } } };
+</script>
+<style>
+  @font-face { font-family:"IBM Plex Sans Arabic"; font-style:normal; font-weight:400; font-display:swap; src:url(/static/assets/fonts/ibm-plex-sans-arabic-regular.woff2) format("woff2") }
+  @font-face { font-family:"IBM Plex Sans Arabic"; font-style:normal; font-weight:500; font-display:swap; src:url(/static/assets/fonts/ibm-plex-sans-arabic-500.woff2) format("woff2") }
+  @font-face { font-family:"IBM Plex Sans Arabic"; font-style:normal; font-weight:600; font-display:swap; src:url(/static/assets/fonts/ibm-plex-sans-arabic-600.woff2) format("woff2") }
+  @font-face { font-family:"IBM Plex Sans Arabic"; font-style:normal; font-weight:700; font-display:swap; src:url(/static/assets/fonts/ibm-plex-sans-arabic-700.woff2) format("woff2") }
+  body { background:#fff; color:#161616; font-family:"IBM Plex Sans Arabic","IBM Plex Sans",sans-serif }
+
+  /* CDF type scale */
+  .display-lg-bold { font-size:48px; line-height:1.2; font-weight:700 } .display-md-medium { font-size:36px; line-height:1.2; font-weight:500 }
+  .display-sm-bold { font-size:30px; line-height:1.2; font-weight:700 } .display-xs-bold { font-size:24px; line-height:2rem; font-weight:700 }
+  .text-lg-semibold { font-size:18px; line-height:1.5; font-weight:600 } .text-md-medium { font-size:16px; line-height:1.5; font-weight:500 }
+  .text-md-regular { font-size:16px; line-height:1.5 } .text-sm-medium { font-size:14px; line-height:1.5; font-weight:500 } .text-sm-regular { font-size:14px; line-height:1.5 }
+  @media (max-width:767px) { .display-lg-bold { font-size:30px } .display-md-medium { font-size:22px } }
+
+  /* Gov digital stamp (exact values from digital-stamp.css) */
+  .stamp { padding:8px 32px; background:#F3F4F6; border-bottom:1px solid #E5E7EB; color:#374151 }
+  .stamp-btn { display:inline-flex; align-items:center; gap:6px; color:#1B8354; white-space:nowrap }
+  .stamp-btn:hover span { text-decoration:underline } .stamp.open .stamp-arrow { transform:rotate(180deg) } .stamp-arrow { transition:transform .2s }
+  .stamp-ring { width:40px; height:40px; border:1px solid #1B8354; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#1B8354 }
+
+  /* Navbar (custom-navbar) */
+  .cdf-nav { height:72px; padding:20px 32px 12px }
+  .nav-link { color:#161616; font-weight:500; font-size:16px; padding:8px 16px; display:flex; align-items:center; gap:10px; transition:background-color .3s }
+  .nav-link:hover { background:#E5E7EB }
+  .nav-item { position:relative } .nav-item .cut { width:90%; height:6px; margin:auto; border-radius:4px; transform:translateY(-6px); background:transparent }
+  .nav-item.open > .nav-link { background:#E5E7EB } .nav-item.open .cut, .nav-item.current .cut { background:#1F2A37 }
+  .mega { display:none; position:absolute; top:100%; inset-inline-start:0; margin-top:8px; background:#fff; padding:24px; min-width:334px; z-index:50;
+          box-shadow:0 12px 16px -4px #10182814,0 4px 6px -2px #10182808 }
+  .nav-item.open .mega { display:block }
+  .mega a { display:flex; padding:.4rem .25rem; color:#1F2A37; font-weight:500; font-size:16px } .mega a:hover { background:#E5E7EB; text-decoration:underline }
+  .mega a.is-active { background:#0D121C; color:#fff; padding:.55rem .75rem; margin-top:.25rem } .mega a.is-active:hover { text-decoration:none }
+  .chev { width:11.25px; height:6.25px; transition:transform .3s } .nav-item.open .chev { transform:rotate(180deg) }
+
+  /* Buttons (app-button) — square, 40px */
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:.4rem; min-height:40px; padding:0 16px; border-radius:0; font-size:14px; font-weight:500; transition:background-color .2s,border-color .2s,color .2s }
+  .btn-primary { background:#0D121C; color:#fff; border:none } .btn-primary:hover:not(:disabled) { background:#1F2A37 }
+  .btn-ghost { border:1px solid #161616; color:#161616; background:transparent } .btn-ghost:hover:not(:disabled) { background:#F3F4F6; border-color:#E5E7EB }
+  .btn-danger { border:1px solid #B42318; color:#B42318; background:#fff } .btn-danger:hover:not(:disabled) { background:#B42318; color:#fff }
+  .btn:disabled { opacity:.45; cursor:not-allowed }
+
+  /* Wasl components on CDF tokens */
+  .card { background:#fff; border:1px solid #E5E7EB; border-radius:0 }
+  .pill { display:inline-flex; align-items:center; gap:.25rem; font-size:12px; line-height:1.5; padding:1px 8px; border-radius:0; font-weight:500; white-space:nowrap }
+  .chip { border:1px solid #161616; color:#161616; background:#fff; border-radius:0; padding:6px 14px; font-size:14px; font-weight:500 }
+  .chip:hover { background:#0D121C; border-color:#0D121C; color:#fff }
+  .bar { height:4px; background:#E5E7EB; overflow:hidden } .bar > i { display:block; height:100%; background:#0D121C }
+  [data-tab] { color:#6C737F; border-bottom:2px solid transparent } .tab-on { border-bottom-color:#0D121C!important; color:#161616!important }
+  .step { font-size:12px; font-weight:500; color:#6C737F }
+  .spin { width:14px; height:14px; border:2px solid currentColor; border-top-color:transparent; border-radius:50%; animation:s .7s linear infinite } @keyframes s { to { transform:rotate(360deg) } }
+  input, textarea, select { border-radius:0 } input[type=range], input[type=checkbox] { accent-color:#0D121C }
+
+  /* Clickable practitioner names (portfolio) */
+  .pname { font:inherit; color:inherit; text-align:start; border-bottom:1px dashed #9DA4AE; padding:0; background:none; cursor:pointer; transition:border-color .2s,color .2s }
+  .pname:hover:not(:disabled) { border-bottom:1px solid #0D121C; color:#0D121C }
+  .pname::after { content:"↗"; font-size:.7em; margin-inline-start:4px; color:#8C6239; vertical-align:super }
+
+  /* Needs tree — sharp architectural connectors, direction-agnostic (logical properties) */
+  .tree-root { display:inline-flex; flex-direction:column; gap:2px; background:#0D121C; color:#fff; padding:14px 20px; min-width:260px; position:relative }
+  .tree-root .k { font-size:11px; letter-spacing:.08em; color:#ffffffa6; font-weight:500 }
+  .tree-levels { margin-inline-start:24px; padding-inline-start:32px; padding-top:18px }
+  .tree-branch { position:relative; padding-bottom:22px }
+  .tree-branch:last-child { padding-bottom:0 }
+  .tree-branch::before { content:""; position:absolute; inset-inline-start:-32px; top:0; bottom:0; width:2px; background:#0D121C }
+  .tree-branch:first-child::before { top:-18px }
+  .tree-branch:last-child::before { bottom:auto; height:21px }
+  .tree-branch:first-child:last-child::before { height:39px }
+  .tree-branch::after { content:""; position:absolute; inset-inline-start:-32px; top:19px; width:32px; height:2px; background:#0D121C }
+  .tree-bnode { display:inline-flex; align-items:center; gap:10px; min-height:40px; padding:0 14px; background:#fff; border:2px solid #0D121C; font-weight:700; font-size:15px }
+  .tree-bnode .sq { width:10px; height:10px; background:currentColor; flex-shrink:0 }
+  .tree-bnode .en { font-weight:500; font-size:12px; color:#6C737F }
+  .tree-bnode .cnt { font-size:12px; font-weight:600; background:#0D121C; color:#fff; padding:0 7px; line-height:20px }
+  .lvl-core .tree-bnode { color:#0D121C } .lvl-important .tree-bnode { color:#8C6239; border-color:#8C6239 } .lvl-optional .tree-bnode { color:#4D5761; border-color:#9DA4AE }
+  .lvl-important .tree-bnode .cnt { background:#8C6239 } .lvl-optional .tree-bnode .cnt { background:#4D5761 }
+  .tree-leaves { margin-inline-start:20px; padding-inline-start:28px; padding-top:12px; list-style:none }
+  .tree-leaf { position:relative; padding-bottom:10px }
+  .tree-leaf:last-child { padding-bottom:0 }
+  .tree-leaf::before { content:""; position:absolute; inset-inline-start:-28px; top:0; bottom:0; width:1px; background:#6C737F }
+  .tree-leaf:first-child::before { top:-12px }
+  .tree-leaf:last-child::before { bottom:auto; height:24px }
+  .tree-leaf:first-child:last-child::before { height:36px }
+  .tree-leaf::after { content:""; position:absolute; inset-inline-start:-28px; top:23px; width:28px; height:1px; background:#6C737F }
+  .leaf { border:1px solid #E5E7EB; background:#fff; padding:12px 14px; transition:border-color .2s }
+  .leaf:hover { border-color:#0D121C }
+  .leaf.is-dropped { opacity:.5; background:#F3F4F6 } .leaf.is-dropped .leaf-role { text-decoration:line-through }
+
+  /* Project card: editable dates */
+  .card-date { height:30px; border:1px solid #D2D6DB; background:#fff; padding:0 6px; font-size:13px; font-weight:500; direction:ltr; color:#161616 }
+  .card-date:hover { border-color:#9DA4AE } .card-date:focus { outline:none; border-color:#0D121C; box-shadow:0 0 0 1px #0D121C }
+  .card-edit-hint { font-size:11px; color:#8C6239 }
+
+  /* Critical deadlines & constraints */
+  .dl-item { display:flex; gap:10px; align-items:flex-start; padding:10px 12px; background:#fff; border:1px solid #E5E7EB; border-inline-start:3px solid #9DA4AE; line-height:1.6 }
+  .dl-item.high { border-inline-start-color:#B42318; background:#FEF3F2 } .dl-item.medium { border-inline-start-color:#8C6239; background:#FBF8F4 }
+  .dl-ic { width:24px; height:24px; flex-shrink:0; display:flex; align-items:center; justify-content:center; background:#0D121C; color:#C8A27A }
+  .dl-item.high .dl-ic { background:#B42318; color:#fff }
+  .dl-when { font-size:11px; color:#6C737F; margin-top:2px }
+
+  /* Heritage emblems (member identity) */
+  .emblem { width:56px; height:56px; flex-shrink:0; display:block; border:1px solid #C8A27A }
+  .emblem.lg { width:72px; height:72px } .emblem.sm { width:44px; height:44px }
+  .emblem-co { width:56px; height:56px; flex-shrink:0; background:#0D121C; color:#C8A27A; display:flex; align-items:center; justify-content:center; font-weight:700; border:1px solid #C8A27A }
+
+  /* Member card metrics (no bars) */
+  .mx { display:grid; grid-template-columns:7.5rem minmax(0,1fr); gap:8px; align-items:start; padding:8px 0; border-top:1px solid #F3F4F6; font-size:13px }
+  .mx:first-child { border-top:none }
+  .mx-k { color:#6C737F; font-size:12px; display:flex; align-items:center; gap:6px; padding-top:2px }
+  .mx-k svg { width:14px; height:14px; color:#8C6239; flex-shrink:0 }
+  .mx-big { font-size:18px; font-weight:700; line-height:1.2 }
+  .loc { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; padding:2px 10px; border:1px solid }
+  .loc i { width:7px; height:7px; border-radius:50%; background:currentColor }
+  .loc.local { color:#1B8354; border-color:#A6D9BE; background:#ECF7F1 } .loc.remote { color:#1F2A37; border-color:#D2D6DB; background:#F3F4F6 }
+  .loc.out_of_scope { color:#7A4A12; border-color:#F5D9A8; background:#FFF8EB }
+  .tag { display:inline-flex; font-size:12px; padding:1px 8px; border:1px solid #D2D6DB; background:#fff; color:#384250 }
+  .tag.gold { border-color:#C8A27A; color:#8C6239; background:#FBF8F4 }
+  .avail-full { color:#1B8354; font-weight:600 } .avail-win { color:#161616; font-weight:600 }
+  .pct-tag { font-weight:600; color:#8C6239; white-space:nowrap }
+
+  /* Pin editor */
+  .pin-box { border:1px dashed #8C6239; background:#FBF8F4; padding:14px 16px }
+  .seg { display:inline-flex; border:1px solid #161616 } .seg button { padding:4px 12px; font-size:13px; font-weight:500 } .seg button.on { background:#0D121C; color:#fff }
+  .pin-field { height:40px; border:1px solid #D2D6DB; background:#fff; padding:0 10px; font-size:14px; width:100% } .pin-field:focus { outline:none; border-color:#161616 }
+  .pin-results { position:absolute; inset-inline:0; top:100%; z-index:30; background:#fff; border:1px solid #161616; border-top:none; max-height:260px; overflow-y:auto }
+  .pin-results button { display:flex; width:100%; justify-content:space-between; gap:8px; padding:8px 10px; text-align:start; font-size:13px; border-bottom:1px solid #E5E7EB }
+  .pin-results button:hover, .pin-results button.on { background:#F3F4F6 }
+  .pin-chip { display:inline-flex; align-items:center; gap:8px; border:1px solid #8C6239; background:#fff; padding:4px 4px 4px 10px; font-size:13px }
+  [dir=rtl] .pin-chip { padding:4px 10px 4px 4px }
+  .pin-chip button { width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center } .pin-chip button:hover { background:#B42318; color:#fff }
+
+  /* Modals */
+  .modal { position:fixed; inset:0; z-index:100; background:#0D121Cb3; display:flex; align-items:flex-start; justify-content:center; padding:40px 16px; overflow-y:auto }
+  .modal[hidden] { display:none }
+  .modal-panel { position:relative; background:#fff; width:100%; max-width:1040px; border-top:4px solid #0D121C; box-shadow:0 24px 48px -12px #10182847; animation:pop .18s ease-out }
+  @keyframes pop { from { opacity:0; transform:translateY(8px) } }
+  .modal-x { width:40px; height:40px; display:inline-flex; align-items:center; justify-content:center; font-size:18px; border:1px solid #E5E7EB; background:#fff } .modal-x:hover { background:#0D121C; color:#fff; border-color:#0D121C }
+  body.modal-open { overflow:hidden }
+
+  /* Contact modal */
+  .ct-sec { border:1px solid #E5E7EB; padding:16px 18px } .ct-sec.focus { border-color:#0D121C; box-shadow:inset 3px 0 0 #8C6239 }
+  [dir=rtl] .ct-sec.focus { box-shadow:inset -3px 0 0 #8C6239 }
+  .ct-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 0; border-top:1px solid #F3F4F6; font-size:14px }
+  .ct-row:first-of-type { border-top:none }
+  .ct-row .k { color:#6C737F; font-size:12px; min-width:84px }
+  .ct-row .v { flex:1; min-width:0; overflow-wrap:anywhere; direction:ltr; text-align:start; unicode-bidi:plaintext }
+  .ct-act { display:inline-flex; align-items:center; gap:6px; border:1px solid #D2D6DB; padding:5px 10px; font-size:12px; font-weight:600; white-space:nowrap; transition:all .15s }
+  .ct-act:hover { background:#0D121C; color:#fff; border-color:#0D121C }
+  .cname { font:inherit; color:#6C737F; font-size:12px; border-bottom:1px dotted #9DA4AE; background:none; padding:0; cursor:pointer }
+  .cname:hover:not(:disabled) { color:#0D121C; border-bottom-color:#0D121C }
+  .oos-note { background:#FFF8EB; border:1px solid #F5D9A8; color:#7A4A12; font-size:12px; line-height:1.6; padding:8px 10px }
+
+  /* Portfolio */
+  .pf-avatar { width:72px; height:72px; background:#0D121C; color:#fff; display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:700; flex-shrink:0 }
+  .pf-work { border:1px solid #E5E7EB; background:#fff; display:flex; flex-direction:column; transition:border-color .2s, transform .2s }
+  .pf-work:hover { border-color:#0D121C; transform:translateY(-2px) }
+  .pf-art { position:relative; aspect-ratio:4/3; overflow:hidden } .pf-art svg { position:absolute; inset:0; width:100%; height:100% }
+  .pf-art .cap { position:absolute; inset-inline:0; bottom:0; padding:14px 16px; background:linear-gradient(0deg,#0D121Cd9,#0D121C00); color:#fff }
+
+  /* Report */
+  .rp h3 { font-size:16px; font-weight:700; display:flex; align-items:center; gap:10px; margin-bottom:12px }
+  .rp h3::before { content:""; width:10px; height:10px; background:#0D121C }
+  .rp table { width:100%; border-collapse:collapse; font-size:13px }
+  .rp th { background:#F3F4F6; text-align:start; font-weight:600; padding:8px 10px; border-bottom:2px solid #0D121C; white-space:nowrap }
+  .rp td { padding:9px 10px; border-bottom:1px solid #E5E7EB; vertical-align:top }
+  .kpi { border:1px solid #E5E7EB; padding:14px 16px } .kpi .v { font-size:22px; font-weight:700; line-height:1.3 }
+  .gantt { position:relative; height:26px; background:repeating-linear-gradient(90deg,#F3F4F6 0 1px,transparent 1px 10%) }
+  [dir=rtl] .gantt { background:repeating-linear-gradient(-90deg,#F3F4F6 0 1px,transparent 1px 10%) }
+  .gantt i { position:absolute; top:4px; bottom:4px; background:#0D121C }
+
+  /* Hero (hero-section: dark image overlay + square dots) */
+  .hero { position:relative; background:
+            radial-gradient(120% 140% at 10% 20%,#ffffff14,#fff0 55%),
+            linear-gradient(180deg,#0404046b,#0707078f 39.9%,#000000f7),
+            linear-gradient(120deg,#2a2622 0%,#17140f 55%,#0b0a08 100%); color:#fff }
+  .hero-dots { display:flex; gap:8px } .hero-dots i { width:24px; height:24px; background:#ffffff73 } .hero-dots i.on { background:#fff }
+  .hero-btn { min-height:40px; padding:0 16px; border:1px solid #ffffff73; color:#fff; font-size:14px; font-weight:500; transition:.2s }
+  .hero-btn:hover:not(:disabled) { background:#fff; color:#161616; border-color:#fff } .hero-btn:disabled { opacity:.45 }
+  .footer-title { font-weight:700; font-size:16px; margin-bottom:16px }
+
+  /* Print: only the executive report, crisp A4 */
+  @media print {
+    @page { size:A4; margin:12mm }
+    * { -webkit-print-color-adjust:exact; print-color-adjust:exact }
+    body.report-open > *:not(#reportModal) { display:none !important }
+    body.report-open { overflow:visible }
+    #reportModal { position:static; display:block; background:none; padding:0; overflow:visible }
+    #reportModal .modal-panel { box-shadow:none; max-width:none; border-top:none; animation:none }
+    .no-print { display:none !important }
+    .rp-sec { break-inside:avoid } .rp tr { break-inside:avoid }
+  }
+</style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+<!-- Saudi gov digital stamp -->
+<aside class="stamp text-sm-regular" id="stamp" aria-label="الختم الرقمي">
+  <div class="max-w-[1440px] mx-auto flex flex-wrap items-center gap-x-2 gap-y-0.5">
+    <img src="/static/assets/sa-flag.svg" width="20" height="14" alt="" class="shrink-0">
+    <p data-i18n="stamp.official">موقع حكومي رسمي تابع لحكومة المملكة العربية السعودية</p>
+    <button type="button" class="stamp-btn text-sm-medium" id="stampBtn" aria-expanded="false" aria-controls="stampBody">
+      <span data-i18n="stamp.how">كيف تتحقق</span>
+      <svg class="stamp-arrow" width="12" height="8" viewBox="0 0 12 8" fill="none"><path d="M1 1.5 6 6.5 11 1.5" stroke="currentColor" stroke-width="1.5"/></svg>
+    </button>
+  </div>
+  <div id="stampBody" hidden class="max-w-[1440px] mx-auto pt-7 pb-5">
+    <div class="flex flex-col md:flex-row gap-6">
+      <div class="flex-1 flex items-start gap-6">
+        <div class="stamp-ring"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></div>
+        <div><p class="text-lg-semibold text-ink mb-1" data-i18n="stamp.t1">روابط المواقع الالكترونية الرسمية السعودية تنتهي بـ <span class="text-ok" dir="ltr">gov.sa</span></p>
+          <p class="text-md-regular" data-i18n="stamp.d1">جميع روابط المواقع الرسمية التابعة للجهات الحكومية في المملكة العربية السعودية تنتهي بـ <span dir="ltr">gov.sa</span></p></div>
+      </div>
+      <div class="flex-1 flex items-start gap-6">
+        <div class="stamp-ring"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="11" width="14" height="9"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>
+        <div><p class="text-lg-semibold text-ink mb-1" data-i18n="stamp.t2">المواقع الالكترونية الحكومية تستخدم بروتوكول <span class="text-ok" dir="ltr">HTTPS</span></p>
+          <p class="text-md-regular" data-i18n="stamp.d2">المواقع الالكترونية الآمنة في المملكة العربية السعودية تستخدم بروتوكول <span dir="ltr">HTTPS</span> للتشفير.</p></div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- Navbar -->
+<header class="bg-white sticky top-0 z-40 border-b border-line">
+  <nav class="cdf-nav max-w-[1440px] mx-auto flex items-center gap-4">
+    <a href="/" class="shrink-0 me-4" aria-label="الصندوق الثقافي"><img src="/static/assets/cdf-logo.svg" width="153" height="26" alt="الصندوق الثقافي"></a>
+    <ul class="hidden lg:flex items-center flex-1">
+      <li class="nav-item"><a href="#" class="nav-link" data-i18n="nav.funding">التمويل الثقافي</a><div class="cut"></div></li>
+      <li class="nav-item"><a href="#" class="nav-link" data-i18n="nav.invest">الاستثمار</a><div class="cut"></div></li>
+      <li class="nav-item dd current">
+        <button type="button" class="nav-link dd-toggle"><span data-i18n="nav.namaa">خدمات نماء التمكينية</span><img class="chev" src="/static/assets/chevron-down.svg" alt=""></button>
+        <div class="cut"></div>
+        <div class="mega">
+          <a href="#" data-i18n="nav.accel">المسرعات</a><a href="#" data-i18n="nav.incent">الحوافز</a><a href="#" data-i18n="nav.vouchers">القسائم</a>
+          <a href="/" class="is-active" data-i18n="nav.consult">الاستشارات ← خدمة وصل</a>
+        </div>
+      </li>
+      <li class="nav-item dd">
+        <button type="button" class="nav-link dd-toggle"><span data-i18n="nav.more">المزيد</span><img class="chev" src="/static/assets/chevron-down.svg" alt=""></button>
+        <div class="cut"></div>
+        <div class="mega !min-w-[346px]"><div class="grid grid-cols-2 gap-x-6">
+          <a href="#" data-i18n="nav.about">عن الصندوق</a><a href="#" data-i18n="nav.contact">تواصل معنا</a><a href="#" data-i18n="nav.stories">قصص النجاح</a><a href="#" data-i18n="nav.news">الأخبار</a>
+        </div></div>
+      </li>
+    </ul>
+    <div class="flex items-center gap-1 ms-auto lg:ms-0 shrink-0">
+      <span id="health" class="pill bg-slate-soft text-slate me-2" title="حالة الخادم">… جارِ الفحص</span>
+      <a href="#" id="langToggle" class="nav-link hidden sm:flex" dir="ltr" lang="en" title="Switch language">English</a>
+      <a href="#" class="nav-link hidden md:flex"><img src="/static/assets/user-avatar.svg" width="19.5" height="23" alt=""><span data-i18n="nav.login">تسجيل الدخول</span></a>
+      <button id="reset" class="btn btn-primary ms-2" data-i18n="nav.new">+ مشروع جديد</button>
+    </div>
+  </nav>
+</header>
+
+<!-- Breadcrumb -->
+<div class="border-b border-line bg-white">
+  <div class="max-w-[1440px] mx-auto px-8 py-3 text-sm-regular text-muted flex flex-wrap items-center gap-2">
+    <a href="#" class="hover:text-ink hover:underline" data-i18n="bc.home">الرئيسية</a><span>/</span>
+    <a href="#" class="hover:text-ink hover:underline" data-i18n="nav.namaa">خدمات نماء التمكينية</a><span>/</span>
+    <a href="#" class="hover:text-ink hover:underline" data-i18n="bc.consult">الاستشارات</a><span>/</span>
+    <span class="text-ink font-medium" data-i18n="bc.wasl">وصل</span>
+  </div>
+</div>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="max-w-[1440px] mx-auto px-6 md:px-20 pt-14 pb-10 flex flex-col gap-2">
+    <p class="display-md-medium" data-i18n="hero.kicker">اطلب المشورة..</p>
+    <h1 class="display-lg-bold max-w-4xl" data-i18n="hero.title">وصل — مستشارك الذكي لتشكيل الفرق الثقافية</h1>
+    <p class="text-md-regular text-white/80 max-w-2xl mt-2" data-i18n="hero.sub">صف مشروعك بكلامك العادي، ووصل يحدد احتياجاته ويركّب لك الفريق الأنسب ضمن ميزانيتك ووقتك.</p>
+    <div class="flex flex-wrap gap-2 mt-5">
+      <button class="hero-btn" data-demo="film" data-i18n="demo.film">فيلم وثائقي بالأحساء</button>
+      <button class="hero-btn" data-demo="fashion" data-i18n="demo.fashion">عرض أزياء بالرياض</button>
+      <button class="hero-btn" data-demo="heritage" data-i18n="demo.heritage">جناح تراثي بالعلا</button>
+      <button class="hero-btn" data-demo="tight" data-i18n="demo.tight">سيناريو ميزانية ضيقة</button>
+    </div>
+    <div class="hero-dots justify-center mt-8"><i></i><i></i><i></i><i class="on"></i></div>
+  </div>
+</section>
+
+<div id="error" class="hidden max-w-[1440px] w-full mx-auto px-8 mt-4"><div class="border border-danger bg-danger-soft text-danger px-4 py-2.5 text-sm-medium flex justify-between"><span id="errorText"></span><button onclick="this.closest('#error').classList.add('hidden')">✕</button></div></div>
+
+<!-- Workspace -->
+<main class="max-w-[1440px] w-full mx-auto px-4 md:px-8 py-8 grid lg:grid-cols-[minmax(0,68fr)_minmax(0,32fr)] gap-6 flex-1">
+  <section class="space-y-6 min-w-0">
+    <div class="card">
+      <div class="px-6 py-4 border-b border-line flex items-center justify-between">
+        <div><div class="step" data-i18n="s1.step">الخطوة ١</div><h2 class="display-xs-bold !text-xl" data-i18n="s1.title">وصف المشروع</h2></div>
+        <span id="statusPill" class="pill bg-brand text-white">محادثة</span>
+      </div>
+      <div id="chat" class="p-6 space-y-3 max-h-[440px] overflow-y-auto"></div>
+      <div id="chips" class="px-6 pb-4 flex flex-wrap gap-2"></div>
+      <form id="chatForm" class="p-6 border-t border-line space-y-2 bg-canvas">
+        <div class="flex gap-2">
+          <textarea id="input" rows="2" class="flex-1 border border-line2 bg-white p-3 text-md-regular focus:outline-none focus:border-ink resize-none" data-i18n-ph="ph.input" placeholder="اكتب فكرتك أو جوابك هنا…"></textarea>
+          <div class="flex flex-col gap-2">
+            <button id="send" class="btn btn-primary" data-i18n="btn.send">إرسال</button>
+            <button type="button" id="mic" class="btn btn-ghost hidden" title="إدخال صوتي">🎙️</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div id="needsSec" class="card hidden">
+      <div class="px-6 py-4 border-b border-line flex flex-wrap gap-3 items-center justify-between">
+        <div><div class="step" data-i18n="s2.step">الخطوة ٢</div><h2 class="display-xs-bold !text-xl" data-i18n="s2.title">مراجعة الاحتياجات</h2>
+          <p class="text-xs text-muted mt-0.5" data-i18n="s2.sub">شجرة الاحتياجات حسب الأهمية</p></div>
+        <button id="build" class="btn btn-primary">ابنِ الفريق الآن ←</button>
+      </div>
+      <div id="needs" class="p-6 overflow-x-auto"></div>
+      <div class="px-6 pb-6"><div id="pinBoxNeeds" class="pin-box" data-pinhost="needs"></div></div>
+      <div id="tips" class="px-6 pb-5 text-sm-regular text-sub"></div>
+    </div>
+
+    <div id="teamSec" class="hidden space-y-5">
+      <div class="sticky top-[72px] z-20 bg-brand text-white px-5 py-3">
+        <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm-medium">
+          <span class="text-lg-semibold" data-i18n="wi.title">ماذا لو؟</span>
+          <label class="flex items-center gap-2 text-white/80"><span data-i18n="wi.budget">الميزانية</span>
+            <input id="wiRange" type="range" min="10000" max="400000" step="5000" class="w-32" style="accent-color:#fff">
+            <input id="wiBudget" type="number" min="1000" step="1000" class="w-28 bg-white text-ink px-2 h-8"> <span data-i18n="wi.sar">ريال</span></label>
+          <label class="flex items-center gap-2 text-white/80"><span data-i18n="wi.shift">تحريك الجدول</span>
+            <input id="wiShift" type="number" step="1" value="0" class="w-16 bg-white text-ink px-2 h-8"> <span data-i18n="wi.days">يوم</span></label>
+          <label class="flex items-center gap-2 text-white/80"><input id="wiRemote" type="checkbox" style="accent-color:#fff"> <span data-i18n="wi.remote">العمل عن بُعد</span></label>
+          <button id="wiApply" class="btn !min-h-[32px] bg-white text-ink hover:bg-canvas" data-i18n="wi.apply">طبّق</button>
+          <button id="wiPinToggle" class="btn !min-h-[32px] border border-white/50 text-white hover:bg-white hover:text-ink" aria-expanded="false" aria-controls="pinBoxWIWrap"><span data-i18n="wi.pin">📌 اقترح عضواً</span><span id="wiPinCount" class="text-xs empty:hidden"></span></button>
+          <span id="latency" class="text-xs font-mono border border-white/40 px-1.5 empty:hidden"></span>
+        </div>
+      </div>
+      <div id="pinBoxWIWrap" hidden><div id="pinBoxWI" class="pin-box" data-pinhost="wi"></div></div>
+      <div id="infeasible" class="hidden card !border-danger p-6"></div>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div id="summary" class="flex flex-wrap gap-3 text-sm-regular"></div>
+        <button id="openReport" class="btn btn-primary hidden"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h8M9 17h8M9 9h3"/></svg><span data-i18n="rp.open">عرض وتصدير التقرير النهائي</span></button>
+      </div>
+      <div id="team" class="grid md:grid-cols-2 gap-4"></div>
+      <div class="card" id="extraSec">
+        <div class="flex border-b border-line text-md-medium">
+          <button class="px-6 py-3 tab-on" data-tab="timeline" data-i18n="tab.timeline">الجدول الزمني</button>
+          <button class="px-6 py-3" data-tab="brief" data-i18n="tab.brief">موجز المشروع</button>
+        </div>
+        <div id="tab-timeline" class="p-6"></div>
+        <div id="tab-brief" class="p-6 hidden">
+          <div class="flex justify-end mb-2"><button id="copy" class="btn btn-ghost !min-h-[32px] text-xs">📋 نسخ</button></div>
+          <pre id="brief" dir="rtl" class="whitespace-pre-wrap font-sans text-sm-regular leading-7 bg-canvas border border-line p-4 text-start"></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="space-y-5 lg:sticky lg:top-[96px] self-start">
+    <div class="card">
+      <div class="px-6 py-4 border-b border-line text-lg-semibold" data-i18n="card.title">بطاقة المشروع</div>
+      <dl id="card" class="p-6 space-y-3 text-sm-regular"></dl>
+      <div class="px-6 pb-4 flex gap-3 text-xs"><span class="text-ok" data-i18n="st.known">✓ معروف</span><span class="text-accent" data-i18n="st.assumed">~ مفترض</span><span class="text-slate" data-i18n="st.missing">؟ ناقص</span></div>
+    </div>
+    <div class="card">
+      <div class="px-6 py-3 border-b border-line flex items-center justify-between gap-2">
+        <span class="text-md-medium" data-i18n="dl.title">المواعيد الحرجة والالتزامات</span>
+        <span id="dlCount" class="pill bg-danger-soft text-danger empty:hidden"></span>
+      </div>
+      <ul id="deadlines" class="p-4 space-y-2 text-sm"></ul>
+    </div>
+  </aside>
+</main>
+
+<!-- Footer -->
+<footer class="bg-brand text-white mt-12">
+  <div class="max-w-[1440px] mx-auto px-6 md:px-20 py-14 grid sm:grid-cols-2 lg:grid-cols-4 gap-10 text-sm-regular">
+    <div>
+      <img src="/static/assets/cdf-logo.svg" width="153" height="26" alt="الصندوق الثقافي" style="filter:brightness(0) invert(1)" class="mb-5">
+      <p class="text-white/65 leading-7" data-i18n="ft.about">تأسس الصندوق الثقافي عام 2021م لتمكين القطاع الثقافي وتعزيز استدامته، دعماً لمستهدفات رؤية المملكة 2030.</p>
+    </div>
+    <div><div class="footer-title" data-i18n="nav.about">عن الصندوق</div><ul class="space-y-3 text-white/70"><li data-i18n="ft.who">من نحن</li><li data-i18n="nav.stories">قصص النجاح</li><li data-i18n="nav.news">الأخبار</li></ul></div>
+    <div><div class="footer-title" data-i18n="ft.services">خدماتنا</div>
+      <ul class="space-y-3 text-white/70"><li data-i18n="nav.funding">التمويل الثقافي</li><li data-i18n="nav.invest">الاستثمار</li><li data-i18n="nav.accel">المسرعات</li><li data-i18n="nav.incent">الحوافز</li><li data-i18n="nav.vouchers">القسائم</li><li data-i18n="bc.consult">الاستشارات</li>
+        <li class="-mt-1"><a href="/" class="inline-flex items-center gap-1 bg-white text-ink font-semibold px-2.5 py-1" data-i18n="ft.wasl">↳ وصل</a></li></ul></div>
+    <div><div class="footer-title" data-i18n="ft.support">الدعم والمساعدة</div><ul class="space-y-3 text-white/70"><li data-i18n="nav.contact">تواصل معنا</li><li data-i18n="ft.faq">الأسئلة الشائعة</li><li data-i18n="ft.privacy">سياسة الخصوصية</li></ul></div>
+  </div>
+  <div class="border-t border-white/10"><div class="max-w-[1440px] mx-auto px-6 md:px-20 py-5 text-xs text-white/50" data-i18n="ft.note">وصل — نموذج أولي توضيحي لخدمة تشكيل الفرق الثقافية (بيانات تجريبية)</div></div>
+</footer>
+
+<!-- Executive report modal -->
+<div id="reportModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="rpTitle">
+  <div class="modal-panel">
+    <div class="no-print sticky top-0 z-10 bg-white border-b border-line px-6 py-3 flex items-center justify-between gap-3">
+      <span class="text-md-medium" data-i18n="rp.bar">التقرير النهائي</span>
+      <div class="flex items-center gap-2">
+        <button id="printReport" class="btn btn-primary"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9V2h12v7M6 18H4v-7h16v7h-2M8 14h8v8H8z"/></svg><span data-i18n="rp.print">طباعة / حفظ PDF</span></button>
+        <button class="modal-x" data-close aria-label="إغلاق">✕</button>
+      </div>
+    </div>
+    <div id="reportBody" class="rp p-6 md:p-10"></div>
+  </div>
+</div>
+
+<!-- Contact modal (practitioner + affiliated company) -->
+<div id="ctModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="ctName">
+  <div class="modal-panel !max-w-[560px]">
+    <button class="modal-x absolute top-3 end-3 z-10" data-close aria-label="إغلاق">✕</button>
+    <div id="ctBody"></div>
+  </div>
+</div>
+
+<!-- Practitioner portfolio modal -->
+<div id="pfModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="pfName">
+  <div class="modal-panel !max-w-[960px]">
+    <button class="modal-x absolute top-3 end-3 z-10" data-close aria-label="إغلاق">✕</button>
+    <div id="pfBody"></div>
+  </div>
+</div>
+
+<script>
+  // Static chrome only: gov stamp toggle + nav dropdowns (independent of app.js wiring)
+  document.getElementById("stampBtn").addEventListener("click", (e) => {
+    const s = document.getElementById("stamp"), b = document.getElementById("stampBody"), open = b.hidden;
+    b.hidden = !open; s.classList.toggle("open", open); e.currentTarget.setAttribute("aria-expanded", open);
+  });
+  document.querySelectorAll(".dd-toggle").forEach((b) => b.addEventListener("click", (e) => {
+    e.stopPropagation(); const d = b.closest(".dd"), was = d.classList.contains("open");
+    document.querySelectorAll(".dd.open").forEach((x) => x.classList.remove("open")); if (!was) d.classList.add("open");
+  }));
+  document.addEventListener("click", (e) => { if (!e.target.closest(".mega")) document.querySelectorAll(".dd.open").forEach((x) => x.classList.remove("open")); });
+</script>
+<script src="/static/app.js"></script>
+</body>
+</html>

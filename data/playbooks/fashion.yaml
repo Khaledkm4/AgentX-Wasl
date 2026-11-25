@@ -1,0 +1,23 @@
+sector: fashion
+typical_roles:
+  - {role: مصمم أزياء, phase: design, importance: 1.0}
+  - {role: منسق عروض أزياء, phase: show, importance: 0.9}
+  - {role: مصمم إضاءة مسرحية, phase: show, importance: 0.7}
+  - {role: خبير أزياء تراثية, phase: design, importance: 0.7}
+  - {role: مصور أزياء, phase: show, importance: 0.6}
+  - {role: خياط ومنفذ, phase: production, importance: 0.8}
+phases: [design, production, show, marketing]
+permits:
+  - تصريح فعالية من الهيئة العامة للترفيه أو هيئة الأزياء
+  - حجز موقع العرض
+commonly_forgotten_needs:
+  - {role: خبير أزياء تراثية, why: توظيف التراث بدون مرجعية يعرّض العرض للنقد}
+  - {role: مصمم إضاءة مسرحية, why: الإضاءة تغيّر ألوان الأقمشة على المنصة}
+  - {role: مصور أزياء, why: بدون توثيق احترافي يضيع أثر العرض إعلامياً}
+# Critical-deadline rules: each permit must be secured `lead_days` before its anchor
+# (anchor = a phase start, or "show" = the official show / launch date)
+permit_rules:
+  - {permit: تصريح فعالية من الهيئة العامة للترفيه أو هيئة الأزياء, en: Event permit (GEA / Fashion Commission), anchor: show, lead_days: 21,
+     purpose_ar: لإقامة العرض في موعده الرسمي, purpose_en: to hold the show on its official date}
+  - {permit: حجز موقع العرض, en: Show venue booking, anchor: show, lead_days: 45,
+     purpose_ar: لضمان المكان وتجهيز المنصة في الوقت المحدد, purpose_en: to secure the venue and set up the runway on time}

@@ -1,0 +1,23 @@
+sector: heritage
+typical_roles:
+  - {role: مصمم معارض, phase: design, importance: 1.0}
+  - {role: باحث تراث وأمين متحف, phase: research, importance: 0.9}
+  - {role: منفذ ديكور وتجهيزات, phase: build, importance: 0.9}
+  - {role: مصمم جرافيك ولوحات تعريفية, phase: design, importance: 0.6}
+  - {role: مطور تجارب تفاعلية, phase: build, importance: 0.5}
+  - {role: مرشد ثقافي, phase: operation, importance: 0.5}
+phases: [research, design, build, operation]
+permits:
+  - موافقة هيئة التراث لعرض القطع
+  - تصريح الهيئة الملكية لمحافظة العلا للفعاليات في العلا
+commonly_forgotten_needs:
+  - {role: باحث تراث وأمين متحف, why: البطاقات التعريفية الخاطئة تضر بمصداقية المعرض}
+  - {role: مرشد ثقافي, why: الزوار يحتاجون سرداً حياً لا لوحات فقط}
+  - {role: مصمم جرافيك ولوحات تعريفية, why: اللوحات ثنائية اللغة شرط في أغلب المعارض}
+# Critical-deadline rules: each permit must be secured `lead_days` before its anchor
+# (anchor = a phase start, or "show" = the official show / launch date)
+permit_rules:
+  - {permit: موافقة هيئة التراث لعرض القطع, en: Heritage Commission approval to display artefacts, anchor: build, lead_days: 10,
+     purpose_ar: لإنهاء تجهيز الجناح وتركيب القطع في الوقت المحدد, purpose_en: to finish fitting out the booth and installing artefacts on time}
+  - {permit: تصريح الهيئة الملكية لمحافظة العلا للفعاليات في العلا, en: Royal Commission for AlUla event permit, anchor: show, lead_days: 21,
+     purpose_ar: لافتتاح الجناح للزوار في يوم العرض الرسمي, purpose_en: to open the booth to visitors on the official launch day}
