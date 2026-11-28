@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>طاقم — شجرة المشروع</title><style>
+@font-face{font-family:'Thmanyah';font-weight:400;src:local('thmanyahsans Regular'),local('thmanyahsans-Regular'),local('Thmanyah Sans Regular')}
+@font-face{font-family:'Thmanyah';font-weight:500;src:local('thmanyahsans Medium'),local('thmanyahsans-Medium'),local('Thmanyah Sans Medium')}
+@font-face{font-family:'Thmanyah';font-weight:700;src:local('thmanyahsans Bold'),local('thmanyahsans-Bold'),local('Thmanyah Sans Bold')}
+@font-face{font-family:'Thmanyah';font-weight:900;src:local('thmanyahsans Black'),local('thmanyahsans-Black'),local('Thmanyah Sans Black')}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}
+body{background:#f9fafb;color:#161616;font-family:'Thmanyah',Tahoma,Arial,sans-serif}
+#viewport{position:fixed;inset:0;perspective:2200px;overflow:hidden;touch-action:none;cursor:grab;outline:none;background:#f3f4f6}#viewport:active{cursor:grabbing}#viewport:focus-visible{box-shadow:inset 0 0 0 3px #0d121c}
+#tree{width:1050px;height:850px;position:absolute;left:50%;top:50%;transform-style:preserve-3d;transform-origin:center center;user-select:none;will-change:transform}
+svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;transform:translateZ(1px)}.edge{fill:none;stroke:#9da4ae;stroke-width:1.5}.joint{fill:#0d121c;stroke:#f3f4f6;stroke-width:3}
+.node{position:absolute;direction:rtl;border-radius:2px;transform-style:preserve-3d;backface-visibility:hidden;transition:filter .15s}
+.root{left:335px;top:20px;width:380px;height:160px;background:linear-gradient(160deg,#1b1f1e,#000);color:#fff;padding:18px 24px;box-shadow:0 6px 0 #6c737f,0 25px 45px #0d121c33;transform:translateZ(12px)}
+.root small{display:block;font-size:12px;line-height:16px;color:#d2d6db}.root h1{font-size:25px;font-weight:700;line-height:34px;margin:6px 0 10px}
+.root .meta{border-top:1px solid #ffffff33;padding-top:9px;display:flex;justify-content:space-between;font-size:11px;line-height:15px;color:#d2d6db}.root .meta span{border-right:1px solid #ffffff55;padding-right:9px}.root .meta b{display:block;font-size:14px;line-height:20px;color:#fff}
+.group{top:245px;width:270px;height:78px;padding:13px 20px;background:#0d121c;color:#fff;box-shadow:0 5px 0 #384250,0 18px 28px #0d121c26;transform:translateZ(8px)}
+.group h2{font-size:18px;font-weight:700;line-height:26px;margin:0 0 4px}.group small{display:block;font-size:12px;line-height:18px;color:#d2d6db}.group i{position:absolute;left:20px;top:23px;font-style:normal;font-size:22px;color:#ffffff}
+.role{width:250px;height:74px;color:#161616;transform:translateZ(6px);filter:drop-shadow(0 4px 0 #cfd4da) drop-shadow(0 10px 12px #0d121c1f)}
+.role .shape{position:absolute;inset:0;width:100%;height:100%;overflow:visible}.role .shape path{fill:#fff;stroke:#d2d6db;stroke-width:1}.role .shape line{stroke:#b8bec6;stroke-width:1.5;stroke-dasharray:3 4}
+.role .main{position:absolute;right:0;top:0;width:168px;height:74px;padding:13px 18px 0 8px}.role h3{font-size:16px;font-weight:700;line-height:24px;margin:0 0 2px;white-space:nowrap}.role .count{font-size:12px;line-height:18px;color:#6c737f}
+.role .stub{position:absolute;left:0;top:0;width:82px;height:74px;display:flex;flex-direction:column;align-items:center;justify-content:center}.role .stub strong{font-size:17px;font-weight:900;line-height:22px}.role .stub small{font-size:11px;color:#6c737f}
+.role.suggested .shape path{fill:#f9fafb;stroke:#0d121c;stroke-dasharray:5 4;stroke-width:1.4}.role.suggested .count:after{content:'مقترح';margin-right:8px;font-size:11px;padding:0 7px;background:#0d121c;color:#fff;border-radius:9px}
+.root:hover,.group:hover{filter:brightness(1.35)}.role:hover .shape path{fill:#eef0f3}
+.node{cursor:pointer;outline:none}.root:focus-visible,.group:focus-visible{outline:3px solid #6c737f;outline-offset:4px}.role:focus-visible .shape path{stroke:#0d121c;stroke-width:3}
+#tree.fly{transition:transform .75s cubic-bezier(.2,.8,.2,1)}
+.node{transition:filter .2s,opacity .35s,transform .45s cubic-bezier(.2,.8,.2,1),visibility .45s}
+#links g,#links .trunk{transition:opacity .35s}#links .off{opacity:0}
+.node.off{opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-34px) scale(.85)}
+.toggle{position:absolute;left:18px;top:24px;width:28px;height:28px;border:1px solid #ffffff66;border-radius:50%;font:400 20px/25px 'Thmanyah',sans-serif;text-align:center}
+.root .toggle{top:16px}
+#tree.focused .node:not(.active){opacity:.14}#tree.focused #links{opacity:.15}#links{transition:opacity .35s}
+#tree.focused .node.off{opacity:0}
+.role.active{transform:translateZ(30px);filter:drop-shadow(0 6px 0 #aeb5be) drop-shadow(0 18px 20px #0d121c45)}
+.role.active .shape path{fill:#0d121c;stroke:#0d121c}.role.active,.role.active .count,.role.active .stub small{color:#fff}.role.active .shape line{stroke:#ffffff66}.role.active.suggested .count:after{background:#fff;color:#0d121c}
+#panel{position:fixed;z-index:5;left:32px;top:50%;width:300px;background:#fff;border:1px solid #e5e7eb;border-top:5px solid #0d121c;padding:22px;box-shadow:0 20px 50px #0d121c26;opacity:0;visibility:hidden;transform:translate(-30px,-50%);transition:.4s}
+#panel.open{opacity:1;visibility:visible;transform:translate(0,-50%)}#panel h2{margin:4px 0 14px;font-size:27px;font-weight:900}#panel p{margin:0;font-size:13px;color:#6c737f}
+#panel dl{margin:0}#panel dl div{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid #e5e7eb;font-size:13px}#panel dt{color:#6c737f}#panel dd{margin:0;font-weight:700}
+#bar{height:7px;background:#e5e7eb;margin:4px 0 18px}#bar i{display:block;height:100%;background:#0d121c;width:0;transition:width .8s .2s}
+#panel button{width:100%;padding:10px;background:#0d121c;color:#fff;border:0;border-radius:2px;font:700 14px 'Thmanyah',sans-serif;cursor:pointer}
+#hint{position:fixed;bottom:12px;left:0;right:0;text-align:center;font-size:13px;color:#6c737f;pointer-events:none}
+@media(max-width:760px){#panel{left:10px;right:10px;width:auto;top:auto;bottom:10px;padding:14px 18px;transform:translateY(30px)}#panel.open{transform:none}#panel h2{font-size:21px;margin:2px 0 6px}#panel dl div{padding:5px 0}#bar{margin-bottom:10px}#hint{display:none}}@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+#nodes{display:contents}#tree{pointer-events:none}.node{pointer-events:auto}.node.off{pointer-events:none}
+.role{height:84px;text-align:center}.role h3{position:absolute;left:0;right:0;top:23px;margin:0;font-size:16px;line-height:24px}
+.role .details{position:absolute;left:22px;right:22px;bottom:9px;display:flex;justify-content:space-between;align-items:center;padding-top:6px;border-top:1px solid #d2d6db;font-size:12px;line-height:18px}.role .details strong{font-size:14px;font-weight:900}
+.role.active .details{border-color:#ffffff55}
+</style></head><body><main id="viewport" tabindex="0" aria-label="شجرة المشروع ثلاثية الأبعاد. اسحب للتدوير، ومرر للتكبير. اسحب مع شفت لتحريك الشجرة. انقر مرتين لإعادة الضبط. أسهم لوحة المفاتيح للتدوير، وزر صفر لإعادة الضبط."><div id="tree"><svg viewBox="0 0 1050 850" aria-hidden="true" id="links"></svg><section class="node root" role="button" tabindex="0" aria-expanded="true"><span class="toggle">−</span><small>طاقم / مشروع تجريبي · العلا</small><h1>فيلم قصير | أثر المكان</h1><div class="meta"><span>الميزانية<b>85,000 ر.س</b></span><span>تقدير الأدوار<b>68,700 ر.س</b></span><span>التسليم النهائي<b>21 ديسمبر 2026</b></span></div></section><div id="nodes"></div></div></main>
+<aside id="panel" aria-live="polite"></aside><div id="hint">اضغط على المربع الغامق لإخفاء فرعه أو إظهاره · اضغط على الدور لتكبيره</div>
+<script>
+'use strict';
+const groups=[{x:720,title:'التحضير والإبداع',date:'1 — 6 ديسمبر',icon:'✦',roles:[['مخرج',1,12000],['كاتب سيناريو',1,5000],['مدير إنتاج',1,7000]]},{x:390,title:'التصوير والإنتاج',date:'7 — 13 ديسمبر',icon:'◉',roles:[['مصور',1,10000],['ممثل رئيسي',2,12000],['ممثل كومبارس',6,4200],['فني إضاءة',1,4000],['مسجل صوت',1,3500,true]]},{x:60,title:'ما بعد الإنتاج',date:'14 — 21 ديسمبر',icon:'▤',roles:[['مونتير',1,6500],['ملوّن',1,3500],['مصمم صوت',1,4500]]}];
+const fmt=n=>new Intl.NumberFormat('en-US').format(n);let nodes='',edges='<g class="stage"><path class="edge" d="M525 180 V210"/><circle class="joint" cx="525" cy="210" r="5"/></g>';
+const arch='M0 84V36C0 15 72 20 125 0C178 20 250 15 250 36V84Z';
+groups.forEach((g,gi)=>{const cx=g.x+135,side=g.x+275;
+edges+=`<g class="stage"><path class="edge" d="M525 210 H${cx} Q${cx} 210 ${cx} 225 V245"/></g><g class="branch" data-g="${gi}"><path class="edge" d="M${cx} 323 V337 Q${cx} 344 ${cx+8} 344 H${side-8} Q${side} 344 ${side} 352 V${360+(g.roles.length-1)*100+58}"/>`;
+nodes+=`<section class="node group" data-g="${gi}" role="button" tabindex="0" aria-expanded="true" style="left:${g.x}px"><h2>${g.title}</h2><small>${g.date} · ${g.roles.length} احتياجات</small><span class="toggle">−</span></section>`;
+g.roles.forEach((r,i)=>{const y=360+i*100;nodes+=`<section class="node role ${r[3]?'suggested':''}" data-g="${gi}" data-r="${i}" role="button" tabindex="0" style="left:${g.x+10}px;top:${y}px;transition-delay:${i*45}ms"><svg class="shape" viewBox="0 0 250 84" aria-hidden="true"><path d="${arch}"/></svg><h3>${r[0]}</h3><div class="details"><span class="count">العدد: ${r[1]}</span><strong>${fmt(r[2])} ر.س</strong></div></section>`;edges+=`<path class="edge" d="M${side} ${y+58} H${g.x+260}"/><circle class="joint" cx="${side}" cy="${y+58}" r="3"/>`;});
+edges+='</g>';});
+document.getElementById('nodes').innerHTML=nodes;document.getElementById('links').innerHTML=edges;
+const viewport=document.getElementById('viewport'),tree=document.getElementById('tree');const camera={rx:12,ry:-7,zoom:1,px:0,py:0};let fit=1;const points=new Map();let previous=null;
+function draw(){tree.style.transform=`translate(calc(-50% + ${camera.px}px),calc(-50% + ${camera.py}px)) scale(${fit*camera.zoom}) rotateX(${camera.rx}deg) rotateY(${camera.ry}deg)`;}
+function resize(){fit=Math.min(innerWidth/1170,innerHeight/960,1.2);if(active)aim();draw();}function reset(){Object.assign(camera,{rx:12,ry:-7,zoom:1,px:0,py:0});draw();}function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+const panel=document.getElementById('panel'),closed=groups.map(()=>false);let rootClosed=false,active=null,saved=null,flyTimer;
+function fly(){tree.classList.add('fly');clearTimeout(flyTimer);flyTimer=setTimeout(()=>tree.classList.remove('fly'),800);}
+function sync(){const set=(el,off)=>el.classList.toggle('off',off);
+document.querySelectorAll('.role,.branch').forEach(e=>set(e,rootClosed||closed[e.dataset.g]));
+document.querySelectorAll('.group,.stage').forEach(e=>set(e,rootClosed));
+document.querySelectorAll('.group').forEach(e=>{const c=closed[e.dataset.g];e.querySelector('.toggle').textContent=c?'+':'−';e.setAttribute('aria-expanded',!c);});
+const root=document.querySelector('.root');root.querySelector('.toggle').textContent=rootClosed?'+':'−';root.setAttribute('aria-expanded',!rootClosed);}
+function aim(){const narrow=innerWidth<=760,S=narrow?Math.min((innerWidth-40)/250,1.7):clamp((innerWidth-420)/340,1.3,2.8);
+const x=parseFloat(active.style.left)+125,y=parseFloat(active.style.top)+42;
+camera.rx=0;camera.ry=0;camera.zoom=S/fit;camera.px=(narrow?0:170)-S*(x-525);camera.py=(narrow?-innerHeight*.24:0)-S*(y-425);}
+function focusRole(el){if(!active)saved={...camera};else active.classList.remove('active');active=el;el.classList.add('active');tree.classList.add('focused');fly();aim();draw();
+const g=groups[el.dataset.g],r=g.roles[el.dataset.r],share=r[2]/85000*100;
+panel.innerHTML=`<p>${g.title}</p><h2>${r[0]}</h2><dl><div><dt>الفترة</dt><dd>${g.date}</dd></div><div><dt>العدد</dt><dd>${r[1]}</dd></div><div><dt>التقدير</dt><dd>${fmt(r[2])} ر.س</dd></div>${r[1]>1?`<div><dt>متوسط الفرد</dt><dd>${fmt(r[2]/r[1])} ر.س</dd></div>`:''}<div><dt>الحالة</dt><dd>${r[3]?'مقترح، خارج تقدير الأدوار':'ضمن تقدير الأدوار'}</dd></div><div><dt>من الميزانية</dt><dd>${share.toFixed(1)}%</dd></div></dl><div id="bar"><i></i></div><button type="button">رجوع للشجرة</button>`;
+panel.classList.add('open');requestAnimationFrame(()=>requestAnimationFrame(()=>{const b=panel.querySelector('#bar i');if(b)b.style.width=share+'%';}));
+panel.querySelector('button').onclick=()=>release();}
+function release(restore=true){if(!active)return;active.classList.remove('active');active=null;tree.classList.remove('focused');panel.classList.remove('open');if(restore){fly();Object.assign(camera,saved);draw();}}
+function tap(el){if(!el){release();return;}if(el.classList.contains('role')){el===active?release():focusRole(el);return;}
+release();if(el.classList.contains('root'))rootClosed=!rootClosed;else closed[el.dataset.g]=!closed[el.dataset.g];sync();}
+let press=null;
+function gesture(){const p=[...points.values()];return p.length>1?{x:(p[0].x+p[1].x)/2,y:(p[0].y+p[1].y)/2,d:Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y),n:2}:{...p[0],n:1};}
+viewport.addEventListener('pointerdown',e=>{if(e.button!==0&&e.button!==2)return;press=points.size?null:{id:e.pointerId,x:e.clientX,y:e.clientY,el:e.target.closest('.node'),button:e.button};points.set(e.pointerId,{x:e.clientX,y:e.clientY});tree.classList.remove('fly');viewport.setPointerCapture(e.pointerId);previous=gesture();viewport.focus({preventScroll:true});});
+viewport.addEventListener('pointermove',e=>{if(!points.has(e.pointerId))return;points.set(e.pointerId,{x:e.clientX,y:e.clientY});if(press&&Math.hypot(e.clientX-press.x,e.clientY-press.y)<7)return;press=null;release(false);const now=gesture();if(previous&&previous.n===now.n){const dx=now.x-previous.x,dy=now.y-previous.y;if(now.n===2){if(previous.d>0)camera.zoom=clamp(camera.zoom*now.d/previous.d,.4,4);camera.px+=dx;camera.py+=dy;}else if(e.shiftKey||e.buttons===2){camera.px+=dx;camera.py+=dy;}else{camera.ry=clamp(camera.ry+dx*.15,-45,45);camera.rx=clamp(camera.rx-dy*.15,-35,45);}draw();}previous=now;});
+viewport.addEventListener('pointerup',e=>{if(press&&press.id===e.pointerId&&press.button===0)tap(press.el);press=null;});viewport.addEventListener('pointercancel',()=>press=null);
+for(const name of ['pointerup','pointercancel','lostpointercapture'])viewport.addEventListener(name,e=>{points.delete(e.pointerId);previous=points.size?gesture():null;});
+viewport.addEventListener('wheel',e=>{e.preventDefault();release(false);tree.classList.remove('fly');camera.zoom=clamp(camera.zoom*Math.exp(-e.deltaY*.001),.4,4);draw();},{passive:false});viewport.addEventListener('contextmenu',e=>e.preventDefault());let lastNode=false;viewport.addEventListener('pointerdown',e=>{if(e.detail<2)lastNode=!!e.target.closest('.node');},true);viewport.addEventListener('dblclick',()=>{if(!lastNode){release(false);fly();reset();}});
+viewport.addEventListener('keydown',e=>{const node=e.target.closest('.node');if(node&&(e.key==='Enter'||e.key===' ')){e.preventDefault();tap(node);return;}if(e.key==='Escape'){release();return;}if(e.key!=='Tab'&&e.key!=='Shift')release(false);let handled=true;switch(e.key){case'ArrowLeft':camera.ry=clamp(camera.ry-3,-45,45);break;case'ArrowRight':camera.ry=clamp(camera.ry+3,-45,45);break;case'ArrowUp':camera.rx=clamp(camera.rx+3,-35,45);break;case'ArrowDown':camera.rx=clamp(camera.rx-3,-35,45);break;case'+':case'=':camera.zoom=clamp(camera.zoom*1.1,.4,4);break;case'-':camera.zoom=clamp(camera.zoom/1.1,.4,4);break;case'0':reset();break;default:handled=false;}if(handled){e.preventDefault();draw();}});window.addEventListener('resize',resize);resize();
+</script></body></html>
