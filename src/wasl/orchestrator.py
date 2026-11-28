@@ -566,6 +566,7 @@ class Orchestrator:
                                               "sectors": p.sectors, "remote_ok": p.remote_ok,
                                               "works_count": len(p.past_works),
                                               "since": min((w.year for w in p.past_works), default=None),
+                                              "past_works": [w.model_dump() for w in p.past_works],
                                               "is_rising_talent": p.is_rising_talent,
                                               "verified_license": p.verified_license,
                                               "contact": p.contact()},

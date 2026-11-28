@@ -17,6 +17,7 @@ class PastWork(BaseModel):
     role: str
     description: str
     collaborator_ids: list[str] = []
+    image_url: str | None = None  # project photo, e.g. /static/portfolio/<slug>.jpg (served locally for offline demos)
 
 
 class Practitioner(BaseModel):

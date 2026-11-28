@@ -143,6 +143,32 @@ RAW = [
       w("طريق البخور", 2024, "إضاءة المعرض", "إضاءة القطع الأثرية في معرض متنقل.", ["h01"])], True, False),
 ]
 
+# project title -> local photo in src/wasl/static/portfolio/ (fetched once by scripts/fetch_portfolio_images.py).
+# Keyed by title so a project shared by several collaborators shows the same photo on each of their portfolios.
+IMAGES = {
+    "أيادي النخيل": "palm-frond-weaving", "ذاكرة الطين": "mud-brick-village", "نول جدتي": "loom-weaving",
+    "سوق القيصرية": "qaisariya-souq", "بحارة الخليج": "pearling-dhow", "مواسم": "folk-festival",
+    "ظلال البلد": "jeddah-al-balad", "الحرفي الأخير": "coppersmith", "عيون الأحساء": "al-ahsa-oasis",
+    "رمال": "desert-dunes-herder", "صنعة": "saudi-crafts", "الليل الطويل": "film-set-sound",
+    "حكايات البحر": "red-sea-boats", "مشروع التخرج: ورق": "handmade-paper", "نخلة وحرفة": "palm-basket-craft",
+    "أصوات السوق": "souq-field-recording", "حكايا الجدات": "oral-history-recording",
+    "سدو": "sadu-weaving", "نجد": "runway-najd", "البحر الأحمر": "runway-summer", "رواشين": "jeddah-roshan",
+    "أسبوع الرياض للأزياء": "fashion-week", "عباءات": "abaya-embroidery", "ليالي الدرعية": "diriyah-night",
+    "عرض التخرج": "graduation-show", "مسرحية الحارة": "theatre-lighting", "ليالي الشرقية": "corniche-night-lights",
+    "عرض الربيع": "runway-lighting", "أزياء عسير": "asir-dress", "البشت": "bisht", "معرض النسيج": "textile-exhibition",
+    "طريق البخور": "incense-route-exhibit", "قاعة النقوش": "rock-inscriptions", "جناح المملكة": "saudi-pavilion",
+    "بيت نصيف": "nasseef-house", "ركن الحجر": "alula-sandstone", "مشروع تخرج: دادان": "dadan",
+    "كتالوج الحجر": "artifact-catalogue", "حكايات الواحة": "alula-oasis", "معرض السيرة": "exhibition-build",
+    "سوق المناخة": "heritage-market-stalls", "دليل المتحف": "national-museum", "خطوط دادان": "ancient-script",
+    "هوية مهرجان محلي": "festival-identity", "مقتنيات الواحة": "museum-vitrine", "سجل العلا": "camel-caravan",
+    "حرفة": "pottery-wheel", "ملصق مهرجان الفيلم": "film-festival",
+}
+
+
+def image_url(title: str) -> str:
+    return f"/static/portfolio/{IMAGES[title]}.jpg"
+
+
 KEYS = ["id", "name", "type", "specialties", "sectors", "city", "remote_ok", "price_min", "price_max",
         "availability", "past_works", "verified_license", "is_rising_talent"]
 
@@ -215,6 +241,7 @@ def build() -> list[Practitioner]:
     for i, r in enumerate(RAW):
         d = dict(zip(KEYS, r))
         d["availability"] = BUSY_AFTER.get(r[0], d["availability"])
+        d["past_works"] = [{**w, "image_url": image_url(w["title"])} for w in d["past_works"]]
         out.append(Practitioner(**d, **contact(r[0], i, r[2]), gender=gender(r[0], r[2])))
     return out
 
@@ -225,6 +252,14 @@ def main():
     dangling = {c for p in items for c in p.collaborators} - ids
     assert not dangling, f"unknown collaborator ids: {dangling}"
     assert all(p.phone and p.email and p.company_name for p in items), "every profile needs contact details"
+    static = Path(__file__).resolve().parents[1] / "src" / "wasl" / "static"
+    for p in items:
+        urls = [w.image_url for w in p.past_works]
+        assert len(set(urls)) == len(urls), f"{p.id}: duplicate portfolio photo"
+        for u in urls:
+            f = static / u.removeprefix("/static/")
+            assert f.is_file() and f.stat().st_size > 20_000 and f.read_bytes()[:3] == b"\xff\xd8\xff", \
+                f"{p.id}: missing/invalid photo {u} (run scripts/fetch_portfolio_images.py)"
     path = db.DB_PATH
     path.unlink(missing_ok=True)
     con = db.connect(path)

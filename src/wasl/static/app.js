@@ -72,7 +72,7 @@ const I18N = {
           style: "طابع العمل", idea: "الفكرة", deadlines: "المواعيد الحرجة والالتزامات", noDeadlines: "لا توجد مواعيد حرجة حالياً." },
     pf: { kicker: "ملف الممارس", fee: "نطاق الأتعاب", collab: "تعاونات سابقة", works: "معرض الأعمال", remote: "يعمل عن بُعد",
           verified: "✓ ترخيص موثّق", rising: "🌟 موهبة صاعدة", inTeam: "في فريقك: ", noWorks: "لا توجد أعمال مسجلة في قاعدة وصل لهذا العضو.",
-          extNote: "هذا العضو مقترح من خارج قاعدة الممارسين، لذلك لا يتوفر له ملف أعمال موثّق.", with: "بالتعاون مع", unknownFee: "غير محدد" },
+          extNote: "هذا العضو مقترح من خارج قاعدة الممارسين، لذلك لا يتوفر له ملف أعمال موثّق.", with: "بالتعاون مع", unknownFee: "غير محدد", zoom: "عرض الصورة بالحجم الكامل" },
   },
   en: {
     title: "Wasl — Cultural Development Fund", langBtn: "العربية", arrow: "→", sarUnit: "SAR",
@@ -138,7 +138,7 @@ const I18N = {
           style: "Work style", idea: "Idea", deadlines: "Critical deadlines & constraints", noDeadlines: "No critical deadlines right now." },
     pf: { kicker: "PRACTITIONER PROFILE", fee: "Fee range", collab: "Past collaborators", works: "Portfolio", remote: "Works remotely",
           verified: "✓ Verified license", rising: "🌟 Rising talent", inTeam: "In your team: ", noWorks: "No works recorded in the Wasl database for this member.",
-          extNote: "This member was suggested from outside the practitioner database, so no verified portfolio is available.", with: "With", unknownFee: "Not set" },
+          extNote: "This member was suggested from outside the practitioner database, so no verified portfolio is available.", with: "With", unknownFee: "Not set", zoom: "View full-size photo" },
     // static markup
     "stamp.official": "An official website of the Government of Saudi Arabia", "stamp.how": "How to verify",
     "stamp.t1": 'Official Saudi websites end with <span class="text-ok" dir="ltr">gov.sa</span>',
@@ -778,6 +778,17 @@ function poster(sector, key, year) {
     <path d="M0 ${f(262 + R() * 10)} Q 140 ${f(240 + R() * 20)} 260 ${f(265)} T 400 ${f(255 + R() * 10)} V300 H0Z" fill="#C9B08A"/>
     ${yr()} stroke="#1F2A3766">${year}</text></svg>`;
 }
+// photo failed to load (missing file, offline CDN, ...): fall back to the generated poster and disable the zoom
+function pfImgFail(img) {
+  const b = img.closest(".pf-photo"); if (!b) return;
+  img.outerHTML = poster(b.dataset.sector, b.dataset.key, b.dataset.year);
+  b.disabled = true; b.querySelector(".pf-zoom")?.remove();  // keep .pf-photo so the 16:9 frame matches its neighbours
+}
+function openZoom(src, cap) {
+  const img = $("#pfZoomImg");
+  img.src = src; img.alt = cap; $("#pfZoomCap").textContent = cap;
+  openModal("#pfZoom");
+}
 const initials = (name) => String(name || "?").trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join(" ");
 async function openPortfolio(id) {
   await loadPrs();
@@ -816,8 +827,14 @@ async function openPortfolio(id) {
       <h3 class="font-bold mb-4 flex items-center gap-2"><span class="w-2.5 h-2.5 bg-ink"></span>${T("pf.works")} <span class="text-muted font-normal text-sm">(${num((p.past_works || []).length)})</span></h3>
       ${(p.past_works || []).length ? `<div class="grid sm:grid-cols-2 gap-4">${p.past_works.map((w) => `
         <article class="pf-work">
-          <div class="pf-art">${poster(sector, p.id + w.title, w.year)}
-            <div class="cap" dir="rtl"><div class="text-xs opacity-80">${esc(w.year)} · ${esc(w.role)}</div><div class="font-bold text-lg leading-7">${esc(w.title)}</div></div></div>
+          ${w.image_url ? `<button type="button" class="pf-art pf-photo group" data-zoom="${esc(w.image_url)}" data-zoomcap="${esc(`${w.title} · ${w.year} · ${w.role}`)}"
+              data-sector="${esc(sector)}" data-key="${esc(p.id + w.title)}" data-year="${esc(w.year)}" aria-label="${esc(w.title)} — ${T("pf.zoom")}">
+              <img src="${esc(w.image_url)}" alt="${esc(w.title)} — ${esc(w.description)}" loading="lazy" decoding="async"
+                class="aspect-video w-full object-cover rounded-xl transition-transform duration-500 ease-out group-hover:scale-105" onerror="pfImgFail(this)">
+              <span class="pf-zoom" aria-hidden="true">⤢</span>`
+            : `<div class="pf-art">${poster(sector, p.id + w.title, w.year)}`}
+            <div class="cap" dir="rtl"><div class="text-xs opacity-80">${esc(w.year)} · ${esc(w.role)}</div><div class="font-bold text-lg leading-7">${esc(w.title)}</div></div>
+          ${w.image_url ? "</button>" : "</div>"}
           <div class="p-4 space-y-2 flex-1">
             <p class="text-sm text-sub leading-6" dir="rtl">${esc(w.description)}</p>
             ${(w.collaborator_ids || []).length ? `<div class="text-xs text-muted">${T("pf.with")}: ${w.collaborator_ids.map((c) => (PRS[c] ? nameBtn(c, nm(c)) : esc(c))).join("، ")}</div>` : ""}
@@ -936,6 +953,8 @@ document.addEventListener("click", async (e) => {
     openContact(t.dataset.contact, t.dataset.focus || "person");
   } else if (t.dataset.pf) {
     openPortfolio(t.dataset.pf);
+  } else if (t.dataset.zoom) {
+    openZoom(t.dataset.zoom, t.dataset.zoomcap || "");
   } else if (t.dataset.tab) {
     $$("[data-tab]").forEach((b) => b.classList.toggle("tab-on", b === t));
     $("#tab-timeline").classList.toggle("hidden", t.dataset.tab !== "timeline");
