@@ -1,0 +1,10 @@
+.git
+.cache
+.venv
+.vercel
+.env
+.claude
+data/wasl.db
+**/__pycache__
+.pytest_cache
+public

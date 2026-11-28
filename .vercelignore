@@ -1,0 +1,11 @@
+# Vercel only hosts the static frontend; the Python backend runs from the Dockerfile elsewhere.
+/*
+!/src
+!/scripts
+!/vercel.json
+/src/*
+!/src/wasl
+/src/wasl/*
+!/src/wasl/static
+/scripts/*
+!/scripts/vercel_build.mjs
