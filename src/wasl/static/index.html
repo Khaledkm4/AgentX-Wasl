@@ -78,34 +78,67 @@
   .pname:hover:not(:disabled) { border-bottom:1px solid #0D121C; color:#0D121C }
   .pname::after { content:"↗"; font-size:.7em; margin-inline-start:4px; color:#8C6239; vertical-align:super }
 
-  /* Needs tree — sharp architectural connectors, direction-agnostic (logical properties) */
-  .tree-root { display:inline-flex; flex-direction:column; gap:2px; background:#0D121C; color:#fff; padding:14px 20px; min-width:260px; position:relative }
-  .tree-root .k { font-size:11px; letter-spacing:.08em; color:#ffffffa6; font-weight:500 }
-  .tree-levels { margin-inline-start:24px; padding-inline-start:32px; padding-top:18px }
-  .tree-branch { position:relative; padding-bottom:22px }
-  .tree-branch:last-child { padding-bottom:0 }
-  .tree-branch::before { content:""; position:absolute; inset-inline-start:-32px; top:0; bottom:0; width:2px; background:#0D121C }
-  .tree-branch:first-child::before { top:-18px }
-  .tree-branch:last-child::before { bottom:auto; height:21px }
-  .tree-branch:first-child:last-child::before { height:39px }
-  .tree-branch::after { content:""; position:absolute; inset-inline-start:-32px; top:19px; width:32px; height:2px; background:#0D121C }
-  .tree-bnode { display:inline-flex; align-items:center; gap:10px; min-height:40px; padding:0 14px; background:#fff; border:2px solid #0D121C; font-weight:700; font-size:15px }
-  .tree-bnode .sq { width:10px; height:10px; background:currentColor; flex-shrink:0 }
-  .tree-bnode .en { font-weight:500; font-size:12px; color:#6C737F }
-  .tree-bnode .cnt { font-size:12px; font-weight:600; background:#0D121C; color:#fff; padding:0 7px; line-height:20px }
-  .lvl-core .tree-bnode { color:#0D121C } .lvl-important .tree-bnode { color:#8C6239; border-color:#8C6239 } .lvl-optional .tree-bnode { color:#4D5761; border-color:#9DA4AE }
-  .lvl-important .tree-bnode .cnt { background:#8C6239 } .lvl-optional .tree-bnode .cnt { background:#4D5761 }
-  .tree-leaves { margin-inline-start:20px; padding-inline-start:28px; padding-top:12px; list-style:none }
-  .tree-leaf { position:relative; padding-bottom:10px }
-  .tree-leaf:last-child { padding-bottom:0 }
-  .tree-leaf::before { content:""; position:absolute; inset-inline-start:-28px; top:0; bottom:0; width:1px; background:#6C737F }
-  .tree-leaf:first-child::before { top:-12px }
-  .tree-leaf:last-child::before { bottom:auto; height:24px }
-  .tree-leaf:first-child:last-child::before { height:36px }
-  .tree-leaf::after { content:""; position:absolute; inset-inline-start:-28px; top:23px; width:28px; height:1px; background:#6C737F }
-  .leaf { border:1px solid #E5E7EB; background:#fff; padding:12px 14px; transition:border-color .2s }
-  .leaf:hover { border-color:#0D121C }
-  .leaf.is-dropped { opacity:.5; background:#F3F4F6 } .leaf.is-dropped .leaf-role { text-decoration:line-through }
+  /* Needs tree — 3D design (from tree.html): drag to rotate, Ctrl+wheel to zoom, tap a role to focus it */
+  .nt-stage-box { position:relative; height:clamp(480px,64vh,700px); perspective:2200px; overflow:hidden; background:#F3F4F6; border:1px solid #E5E7EB; cursor:grab; outline:none; touch-action:pan-y; user-select:none }
+  .nt-stage-box:active { cursor:grabbing } .nt-stage-box:focus-visible { box-shadow:inset 0 0 0 3px #0D121C }
+  .nt-tree { position:absolute; left:50%; top:50%; transform-style:preserve-3d; transform-origin:center center; will-change:transform; pointer-events:none }
+  .nt-tree.fly { transition:transform .75s cubic-bezier(.2,.8,.2,1) }
+  .nt-links { position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none; transform:translateZ(1px) }
+  .nt-edge { fill:none; stroke:#9DA4AE; stroke-width:1.5 } .nt-joint { fill:#0D121C; stroke:#F3F4F6; stroke-width:3 }
+  .nt-links g { transition:opacity .35s } .nt-links .off { opacity:0 }
+  .nt-node { position:absolute; border-radius:2px; transform-style:preserve-3d; backface-visibility:hidden; cursor:pointer; outline:none; pointer-events:auto;
+             transition:filter .2s,opacity .35s,transform .45s cubic-bezier(.2,.8,.2,1),visibility .45s }
+  .nt-node.off { opacity:0; visibility:hidden; pointer-events:none; transform:translateY(-34px) scale(.85) }
+  .nt-toggle { position:absolute; inset-inline-end:18px; top:24px; width:28px; height:28px; border:1px solid #ffffff66; border-radius:50%; font-size:20px; line-height:25px; text-align:center }
+  .nt-root { top:20px; width:380px; height:160px; background:linear-gradient(160deg,#1b1f1e,#000); color:#fff; padding:18px 24px; box-shadow:0 6px 0 #6C737F,0 25px 45px #0D121C33; transform:translateZ(12px) }
+  .nt-root .nt-toggle { top:16px }
+  .nt-root small { display:block; font-size:12px; line-height:16px; color:#D2D6DB; padding-inline-end:40px }
+  .nt-root h2 { font-size:24px; font-weight:700; line-height:34px; margin:6px 0 10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+  .nt-meta { border-top:1px solid #ffffff33; padding-top:9px; display:flex; justify-content:space-between; font-size:11px; line-height:15px; color:#D2D6DB }
+  .nt-meta span { border-inline-start:1px solid #ffffff55; padding-inline-start:9px } .nt-meta b { display:block; font-size:14px; line-height:20px; color:#fff }
+  .nt-group { top:245px; width:270px; height:78px; padding:13px 20px; background:#0D121C; color:#fff; box-shadow:0 5px 0 #384250,0 18px 28px #0D121C26; transform:translateZ(8px) }
+  .nt-group h3 { font-size:18px; font-weight:700; line-height:26px; margin:0 0 4px; padding-inline-end:40px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+  .nt-group small { display:block; font-size:12px; line-height:18px; color:#D2D6DB; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+  .nt-root:hover,.nt-group:hover { filter:brightness(1.35) }
+  .nt-root:focus-visible,.nt-group:focus-visible { outline:3px solid #6C737F; outline-offset:4px }
+  .nt-role { width:250px; height:84px; text-align:center; color:#161616; transform:translateZ(6px); filter:drop-shadow(0 4px 0 #CFD4DA) drop-shadow(0 10px 12px #0D121C1F) }
+  .nt-shape { position:absolute; inset:0; width:100%; height:100%; overflow:visible } .nt-shape path { fill:#fff; stroke:#D2D6DB; stroke-width:1 }
+  .nt-role h4 { position:absolute; inset-inline:14px; top:23px; margin:0; font-size:16px; font-weight:700; line-height:24px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+  .nt-details { position:absolute; inset-inline:22px; bottom:9px; display:flex; justify-content:space-between; align-items:center; padding-top:6px; border-top:1px solid #D2D6DB; font-size:12px; line-height:18px; color:#6C737F }
+  .nt-details strong { font-size:14px; font-weight:800; color:#161616 }
+  .nt-role.lvl-core .nt-details span { color:#0D121C; font-weight:600 } .nt-role.lvl-important .nt-details span { color:#8C6239; font-weight:600 }
+  .nt-badge { position:absolute; top:-9px; left:50%; transform:translateX(-50%); font-size:10px; line-height:16px; padding:0 8px; background:#0D121C; color:#fff; border-radius:9px; white-space:nowrap }
+  .nt-pin { position:absolute; top:6px; inset-inline-end:10px; font-size:13px }
+  .nt-role.suggested .nt-shape path { fill:#F9FAFB; stroke:#0D121C; stroke-dasharray:5 4; stroke-width:1.4 }
+  .nt-role:hover .nt-shape path { fill:#EEF0F3 } .nt-role:focus-visible .nt-shape path { stroke:#0D121C; stroke-width:3 }
+  .nt-role.dropped { opacity:.45 } .nt-role.dropped h4 { text-decoration:line-through }
+  .nt-tree.focused .nt-node:not(.active) { opacity:.14 } .nt-tree.focused .nt-links { opacity:.15 } .nt-links { transition:opacity .35s }
+  .nt-tree.focused .nt-node.off { opacity:0 }
+  .nt-role.active { opacity:1 !important; transform:translateZ(30px); filter:drop-shadow(0 6px 0 #AEB5BE) drop-shadow(0 18px 20px #0D121C45) }
+  .nt-role.active .nt-shape path { fill:#0D121C; stroke:#0D121C }
+  .nt-role.active, .nt-role.active .nt-details, .nt-role.active .nt-details strong, .nt-role.active .nt-details span { color:#fff }
+  .nt-role.active .nt-details { border-color:#ffffff55 } .nt-role.active .nt-badge { background:#fff; color:#0D121C }
+  .nt-panel { position:absolute; z-index:5; inset-inline-end:16px; top:50%; width:310px; max-height:calc(100% - 32px); overflow-y:auto; background:#fff; border:1px solid #E5E7EB; border-top:5px solid #0D121C;
+              padding:20px; box-shadow:0 20px 50px #0D121C26; opacity:0; visibility:hidden; transform:translate(0,-46%); transition:.4s; cursor:auto; user-select:text }
+  .nt-panel.open { opacity:1; visibility:visible; transform:translate(0,-50%) }
+  .nt-panel > p:first-child { margin:0; font-size:13px; color:#6C737F } .nt-panel h3 { margin:4px 0 12px; font-size:24px; font-weight:800; line-height:1.3 }
+  .nt-panel dl div { display:flex; justify-content:space-between; gap:10px; padding:8px 0; border-top:1px solid #E5E7EB; font-size:13px }
+  .nt-panel dt { color:#6C737F } .nt-panel dd { margin:0; font-weight:700; text-align:end }
+  .nt-bar { height:7px; background:#E5E7EB; margin:4px 0 14px } .nt-bar i { display:block; height:100%; background:#0D121C; width:0; transition:width .8s .2s }
+  .nt-why { font-size:13px; line-height:1.7; color:#384250; margin:0 0 8px } .nt-risk { font-size:12px; line-height:1.6; color:#B42318; margin:0 0 12px }
+  .nt-actions { display:flex; gap:8px } .nt-actions button { flex:1; padding:9px; font-size:14px; font-weight:700; border:1px solid #0D121C; border-radius:2px }
+  .nt-back { background:#0D121C; color:#fff } .nt-drop { background:#fff; color:#0D121C } .nt-drop.on { background:#FEF3F2; color:#B42318; border-color:#B42318 }
+  .nt-ctl { position:absolute; z-index:4; bottom:12px; inset-inline-start:12px; display:flex; gap:4px; cursor:auto }
+  .nt-ctl button { width:34px; height:34px; background:#fff; border:1px solid #D2D6DB; font-size:18px; line-height:1; color:#0D121C }
+  .nt-ctl button:hover { background:#0D121C; color:#fff; border-color:#0D121C }
+  .nt-hint { position:absolute; bottom:18px; inset-inline:140px; text-align:center; font-size:12px; color:#6C737F; pointer-events:none }
+  /* narrow = the tree box itself is narrow (set from JS), so a slim page column behaves like a phone */
+  .nt-narrow .nt-hint { display:none }
+  .nt-narrow .nt-panel { inset-inline:10px; width:auto; top:auto; bottom:10px; max-height:52%; padding:14px 16px; transform:translateY(30px) }
+  .nt-narrow .nt-panel.open { transform:none } .nt-narrow .nt-panel h3 { font-size:20px; margin:2px 0 6px }
+  .nt-narrow .nt-panel dl div { padding:5px 0 } .nt-narrow .nt-ctl { bottom:auto; top:10px }
+  @media (max-width:760px) { .nt-stage-box { height:560px } }
+  @media (prefers-reduced-motion:reduce) { .nt-tree, .nt-node, .nt-panel, .nt-bar i { transition:none !important } }
 
   /* Project card: editable dates */
   .card-date { height:30px; border:1px solid #D2D6DB; background:#fff; padding:0 6px; font-size:13px; font-weight:500; direction:ltr; color:#161616 }
@@ -339,10 +372,10 @@
     <div id="needsSec" class="card hidden">
       <div class="px-6 py-4 border-b border-line flex flex-wrap gap-3 items-center justify-between">
         <div><div class="step" data-i18n="s2.step">الخطوة ٢</div><h2 class="display-xs-bold !text-xl" data-i18n="s2.title">مراجعة الاحتياجات</h2>
-          <p class="text-xs text-muted mt-0.5" data-i18n="s2.sub">شجرة الاحتياجات حسب الأهمية</p></div>
+          <p class="text-xs text-muted mt-0.5" data-i18n="s2.sub">شجرة الاحتياجات حسب مراحل المشروع</p></div>
         <button id="build" class="btn btn-primary">ابنِ الفريق الآن ←</button>
       </div>
-      <div id="needs" class="p-6 overflow-x-auto"></div>
+      <div id="needs" class="p-4 md:p-6"></div>
       <div class="px-6 pb-6"><div id="pinBoxNeeds" class="pin-box" data-pinhost="needs"></div></div>
       <div id="tips" class="px-6 pb-5 text-sm-regular text-sub"></div>
     </div>

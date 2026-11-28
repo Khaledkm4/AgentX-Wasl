@@ -50,7 +50,13 @@ const I18N = {
     tree: { root: "المشروع", core: "أدوار أساسية", important: "أدوار مهمة", optional: "أدوار مكملة",
             coreEn: "Core / Mandatory", importantEn: "Important", optionalEn: "Optional",
             mentioned: "ذكرته", inferred: "مستنتج", remote: "عن بُعد", conf: "الثقة", imp: "الأهمية", drop: "استبعد",
-            risk: "⚠️ لو تجاهلته:", pinned: "📌 مثبّت:" },
+            risk: "⚠️ لو تجاهلته:", pinned: "📌 مثبّت:",
+            lvl: { core: "أساسي", important: "مهم", optional: "مكمّل" }, nNeeds: "{n} احتياجات", budget: "الميزانية",
+            needs: "الاحتياجات", due: "التسليم", period: "الفترة", level: "المستوى", source: "المصدر", place: "العمل عن بُعد",
+            yes: "ممكن", no: "حضوري", back: "رجوع للشجرة", restore: "أعد الدور", dropped: "مستبعد",
+            hint: "اسحب للتدوير · Ctrl + عجلة الماوس للتكبير · اضغط المربع الغامق لطيّ فرعه · اضغط الدور لتكبيره",
+            zin: "تكبير", zout: "تصغير", zreset: "إعادة الضبط",
+            aria: "شجرة الاحتياجات ثلاثية الأبعاد. اسحب للتدوير، Ctrl مع عجلة الماوس للتكبير، Shift مع السحب للتحريك، نقر مزدوج لإعادة الضبط. الأسهم للتدوير وصفر لإعادة الضبط." },
     card: { fit: "ملاءمة", rising: "🌟 موهبة صاعدة", collab: "🤝 عمل مشترك", licensed: "✓ مرخص", backup: "البديل:",
             reject: "محاكاة رفض العضو", pinned: "📌 مقترح منك", external: "من خارج القاعدة",
             oos: "↔ خارج نطاقه المعتاد", oosBase: "الأتعاب الأساسية", oosFee: "إضافة",
@@ -116,7 +122,13 @@ const I18N = {
     tree: { root: "PROJECT", core: "Core roles", important: "Important roles", optional: "Optional roles",
             coreEn: "أدوار أساسية", importantEn: "أدوار مهمة", optionalEn: "أدوار مكملة",
             mentioned: "You mentioned", inferred: "Inferred", remote: "Remote", conf: "Confidence", imp: "Importance", drop: "Drop",
-            risk: "⚠️ If ignored:", pinned: "📌 Pinned:" },
+            risk: "⚠️ If ignored:", pinned: "📌 Pinned:",
+            lvl: { core: "Core", important: "Important", optional: "Optional" }, nNeeds: "{n} needs", budget: "Budget",
+            needs: "Needs", due: "Delivery", period: "Period", level: "Level", source: "Source", place: "Remote work",
+            yes: "Possible", no: "On-site", back: "Back to tree", restore: "Restore role", dropped: "Dropped",
+            hint: "Drag to rotate · Ctrl + wheel to zoom · Tap a dark box to fold its branch · Tap a role to zoom in",
+            zin: "Zoom in", zout: "Zoom out", zreset: "Reset view",
+            aria: "3D needs tree. Drag to rotate, Ctrl + wheel to zoom, Shift + drag to pan, double-click to reset. Arrow keys rotate, 0 resets." },
     card: { fit: "Fit", rising: "🌟 Rising talent", collab: "🤝 Worked together", licensed: "✓ Licensed", backup: "Backup:",
             reject: "Simulate decline", pinned: "📌 Your pick", external: "External",
             oos: "↔ Outside usual scope", oosBase: "Base fee", oosFee: "Extra",
@@ -154,7 +166,7 @@ const I18N = {
     "demo.film": "Documentary in Al-Ahsa", "demo.fashion": "Fashion show in Riyadh", "demo.heritage": "Heritage pavilion in AlUla", "demo.tight": "Tight-budget scenario",
     "s1.step": "STEP 1", "s1.title": "Describe the project", "btn.send": "Send",
     "ph.input": "Type your idea or answer here… (Arabic works best)",
-    "s2.step": "STEP 2", "s2.title": "Review the needs", "s2.sub": "Needs tree by importance",
+    "s2.step": "STEP 2", "s2.title": "Review the needs", "s2.sub": "Needs tree by project phase",
     "wi.title": "What if?", "wi.budget": "Budget", "wi.sar": "SAR", "wi.shift": "Shift schedule", "wi.days": "days", "wi.remote": "Remote work",
     "wi.apply": "Apply", "wi.pin": "📌 Suggest a member", "rp.open": "View & export final report", "rp.bar": "Final report", "rp.print": "Print / Save PDF",
     "tab.timeline": "Timeline", "tab.brief": "Project brief", "card.title": "Project card",
@@ -410,46 +422,197 @@ function renderDeadlines(list) {
 // ---------------------------------------------------------------- 1) needs tree
 const level = (imp) => (imp >= 0.85 ? "core" : imp >= 0.6 ? "important" : "optional");
 const pinName = (p) => (p.practitioner_id ? PRS[p.practitioner_id]?.name || p.practitioner_id : p.name);
+// 3D tree (design from tree.html): root = project, one dark box per phase (sorted by date), one arch card per need.
+// State survives re-renders: camera, folded branches and dropped needs (mirrored into hidden .drop inputs for buildTeam).
+const NT = { camera: null, saved: null, closed: {}, rootClosed: false, dropped: new Set(), active: null, layout: null };
+const NT_COL = 270, NT_GAP = 60, NT_ROLE_Y = 360, NT_STEP = 100;
+const NT_ARCH = "M0 84V36C0 15 72 20 125 0C178 20 250 15 250 36V84Z";
+const ntClamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function ntPhases(needs) {
+  const by = new Map();
+  needs.forEach((n, i) => {
+    const g = by.get(n.phase) || { phase: n.phase, order: i, start: null, end: null, needs: [] };
+    const [s, e] = n.phase_window || [];
+    if (s && (!g.start || s < g.start)) g.start = s;
+    if (e && (!g.end || e > g.end)) g.end = e;
+    g.needs.push(n); by.set(n.phase, g);
+  });
+  return [...by.values()].sort((a, b) => (a.start && b.start && a.start !== b.start ? (a.start < b.start ? -1 : 1) : a.order - b.order));
+}
 function renderNeeds(r) {
   const locked = r.status !== "needs_review";
   $("#build").textContent = locked ? T("rebuild") : T("build");
-  const dropped = new Set($$(".drop:checked").map((x) => x.value));
-  const groups = { core: [], important: [], optional: [] };
-  r.needs.forEach((n) => groups[level(n.importance)].push(n));
-  const c = r.card || {}, ar = T("arrow");
-  const leaf = (n) => {
-    const pin = PINS.find((p) => p.need_id === n.id);
-    return `<li class="tree-leaf"><div class="leaf ${dropped.has(n.id) ? "is-dropped" : ""}">
-      <div class="flex flex-wrap items-start justify-between gap-2">
-        <div class="font-bold leaf-role">${esc(n.role)}</div>
-        <div class="flex gap-1 flex-wrap">
-          ${n.mentioned ? `<span class="pill bg-ok-soft text-ok">${T("tree.mentioned")}</span>` : `<span class="pill bg-accent-soft text-accent">${T("tree.inferred")}</span>`}
-          <span class="pill bg-slate-soft text-slate">${esc(tm("PHASES", n.phase))}</span>
-          ${n.remote_ok ? `<span class="pill bg-slate-soft text-slate">${T("tree.remote")}</span>` : ""}
-        </div>
+  const ids = new Set(r.needs.map((n) => n.id));
+  NT.dropped = new Set([...NT.dropped].filter((id) => ids.has(id)));
+  const rtl = LANG === "ar", c = r.card || {}, phases = ntPhases(r.needs), n = Math.max(phases.length, 1);
+  const total = n * NT_COL + (n - 1) * NT_GAP, W = Math.max(total + 80, 460);
+  const H = NT_ROLE_Y + Math.max(1, ...phases.map((g) => g.needs.length)) * NT_STEP, mid = W / 2, start = (W - total) / 2;
+  NT.layout = { W, H, rtl, phases };
+  let nodes = "", edges = `<g class="nt-stage"><path class="nt-edge" d="M${mid} 180 V210"/><circle class="nt-joint" cx="${mid}" cy="210" r="5"/></g>`;
+  phases.forEach((g, gi) => {
+    const x = rtl ? W - start - NT_COL - gi * (NT_COL + NT_GAP) : start + gi * (NT_COL + NT_GAP);
+    const cx = x + NT_COL / 2, side = rtl ? x + NT_COL + 5 : x - 5, s = rtl ? 1 : -1, cardEdge = rtl ? x + 260 : x + 10;
+    const lastY = NT_ROLE_Y + (g.needs.length - 1) * NT_STEP;
+    const dates = g.start ? `${fmtDate(g.start)}${g.end && g.end !== g.start ? ` ${T("arrow")} ${fmtDate(g.end)}` : ""}` : "";
+    edges += `<g class="nt-stage"><path class="nt-edge" d="M${mid} 210 H${cx} V245"/></g><g class="nt-branch" data-g="${gi}">
+      <path class="nt-edge" d="M${cx} 323 V337 Q${cx} 344 ${cx + 8 * s} 344 H${side - 8 * s} Q${side} 344 ${side} 352 V${lastY + 58}"/>`;
+    nodes += `<section class="nt-node nt-group" data-g="${gi}" role="button" tabindex="0" aria-expanded="true" style="left:${x}px">
+      <h3>${esc(tm("PHASES", g.phase) || "—")}</h3><small>${dates ? `<bdi>${dates}</bdi> · ` : ""}${T("tree.nNeeds", { n: num(g.needs.length) })}</small><span class="nt-toggle">−</span></section>`;
+    g.needs.forEach((nd, i) => {
+      const y = NT_ROLE_Y + i * NT_STEP, lv = level(nd.importance), pin = PINS.find((p) => p.need_id === nd.id);
+      nodes += `<section class="nt-node nt-role lvl-${lv}${nd.mentioned ? "" : " suggested"}${NT.dropped.has(nd.id) ? " dropped" : ""}" data-g="${gi}" data-need="${esc(nd.id)}"
+          role="button" tabindex="0" style="left:${x + 10}px;top:${y}px;transition-delay:${i * 45}ms" aria-label="${esc(nd.role)}">
+        <svg class="nt-shape" viewBox="0 0 250 84" aria-hidden="true"><path d="${NT_ARCH}"/></svg>
+        ${nd.mentioned ? "" : `<span class="nt-badge">${T("tree.inferred")}</span>`}${pin ? `<span class="nt-pin" title="${esc(pinName(pin))}">📌</span>` : ""}
+        <h4>${esc(nd.role)}</h4>
+        <div class="nt-details"><span>${T("tree.lvl." + lv)}</span><strong>${num(pct(nd.importance))}%</strong></div></section>`;
+      edges += `<path class="nt-edge" d="M${side} ${y + 58} H${cardEdge}"/><circle class="nt-joint" cx="${side}" cy="${y + 58}" r="3"/>`;
+    });
+    edges += "</g>";
+  });
+  const sectors = [c.sector?.value, ...(c.secondary_sectors || [])].filter(Boolean).map((s) => tm("SECTORS", s)).join(" + ") || "—";
+  const due = c.show_date?.value || c.deadline?.value;
+  $("#needs").innerHTML = `
+    <div class="nt-stage-box" tabindex="0" aria-label="${T("tree.aria")}">
+      <div class="nt-tree" style="width:${W}px;height:${H}px">
+        <svg class="nt-links" viewBox="0 0 ${W} ${H}" aria-hidden="true">${edges}</svg>
+        <section class="nt-node nt-root" role="button" tabindex="0" aria-expanded="true" style="left:${mid - 190}px"><span class="nt-toggle">−</span>
+          <small>${T("tree.root")}${c.city?.value ? " · " + esc(c.city.value) : ""}</small><h2>${esc(sectors)}</h2>
+          <div class="nt-meta"><span>${T("tree.budget")}<b>${c.budget?.value ? sar(c.budget.value) : "—"}</b></span>
+            <span>${T("tree.needs")}<b>${num(r.needs.length)}</b></span><span>${T("tree.due")}<b>${due ? fmtDate(due) : "—"}</b></span></div></section>
+        ${nodes}
       </div>
-      ${n.reason ? `<p class="text-sm text-sub leading-6 mt-1">${esc(n.reason)}</p>` : ""}
-      ${n.consequence_if_ignored ? `<p class="text-xs text-warn leading-5 mt-1">${T("tree.risk")} ${esc(n.consequence_if_ignored)}</p>` : ""}
-      ${pin ? `<p class="text-xs mt-2"><span class="pill bg-accent-soft text-accent">${T("tree.pinned")} ${esc(pinName(pin))}</span></p>` : ""}
-      <div class="flex items-center justify-between gap-3 text-xs text-muted mt-2">
-        <span class="tag gold">${T("tree.imp")}: ${num(pct(n.importance))}%</span>
-        <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="drop" value="${esc(n.id)}" ${dropped.has(n.id) ? "checked" : ""}> ${T("tree.drop")}</label></div>
-    </div></li>`;
-  };
-  const branches = Object.entries(groups).filter(([, ns]) => ns.length).map(([lv, ns]) => `
-    <div class="tree-branch lvl-${lv}">
-      <div class="tree-bnode"><span class="sq"></span>${T("tree." + lv)} <span class="en">${T("tree." + lv + "En")}</span><span class="cnt">${num(ns.length)}</span></div>
-      <ul class="tree-leaves">${ns.map(leaf).join("")}</ul>
-    </div>`).join("");
-  $("#needs").innerHTML = `<div class="min-w-[520px]">
-    <div class="tree-root"><span class="k">${T("tree.root")}</span>
-      <span class="text-lg-semibold">${esc([c.sector?.value, ...(c.secondary_sectors || [])].filter(Boolean).map((s) => tm("SECTORS", s)).join(" + ") || "—")}${c.city?.value ? " · " + esc(c.city.value) : ""}</span>
-      <span class="text-xs text-white/70">${c.budget?.value ? sar(c.budget.value) : ""}${c.start_date?.value ? ` · <span dir="ltr">${esc(c.start_date.value)} ${ar} ${esc(c.deadline?.value || "")}</span>` : ""}</span>
+      <aside class="nt-panel" aria-live="polite"></aside>
+      <div class="nt-ctl"><button type="button" data-ntz="in" aria-label="${T("tree.zin")}">+</button><button type="button" data-ntz="out" aria-label="${T("tree.zout")}">−</button><button type="button" data-ntz="reset" aria-label="${T("tree.zreset")}">⟲</button></div>
+      <div class="nt-hint">${T("tree.hint")}</div>
     </div>
-    <div class="tree-levels">${branches}</div></div>`;
+    <div hidden>${r.needs.map((nd) => `<input type="checkbox" class="drop" value="${esc(nd.id)}" ${NT.dropped.has(nd.id) ? "checked" : ""}>`).join("")}</div>`;
+  ntWire(r);
   const tips = (r.events || []).filter((e) => e.startsWith("اقتراح إضافي"));
   $("#tips").innerHTML = tips.length ? "💡 " + tips.map(esc).join(" · ") : "";
 }
+function ntWire(r) {
+  const box = $("#needs .nt-stage-box"), tree = box.querySelector(".nt-tree"), panel = box.querySelector(".nt-panel");
+  const { W, H, rtl, phases } = NT.layout, home = { rx: 12, ry: rtl ? -7 : 7, zoom: 1, px: 0, py: 0 };
+  const cam = NT.camera || (NT.camera = { ...home });
+  let fit = 1, flyT, press = null, previous = null, lastNode = false;
+  const points = new Map();
+  const draw = () => { tree.style.transform = `translate(calc(-50% + ${cam.px}px),calc(-50% + ${cam.py}px)) scale(${fit * cam.zoom}) rotateX(${cam.rx}deg) rotateY(${cam.ry}deg)`; };
+  const fly = () => { tree.classList.add("fly"); clearTimeout(flyT); flyT = setTimeout(() => tree.classList.remove("fly"), 800); };
+  const reset = () => { Object.assign(cam, home); draw(); };
+  const sync = () => {
+    const off = (el, v) => el.classList.toggle("off", v);
+    box.querySelectorAll(".nt-role,.nt-branch").forEach((e) => off(e, NT.rootClosed || !!NT.closed[phases[e.dataset.g].phase]));
+    box.querySelectorAll(".nt-group,.nt-stage").forEach((e) => off(e, NT.rootClosed));
+    box.querySelectorAll(".nt-group").forEach((e) => { const cl = !!NT.closed[phases[e.dataset.g].phase];
+      e.querySelector(".nt-toggle").textContent = cl ? "+" : "−"; e.setAttribute("aria-expanded", !cl); });
+    const root = box.querySelector(".nt-root"); root.querySelector(".nt-toggle").textContent = NT.rootClosed ? "+" : "−"; root.setAttribute("aria-expanded", !NT.rootClosed);
+  };
+  const aim = (el) => {
+    const w = box.clientWidth, h = box.clientHeight, narrow = w <= 760;
+    const S = narrow ? Math.min((w - 40) / 250, 1.7) : ntClamp((w - 420) / 340, 1.3, 2.6);
+    const x = parseFloat(el.style.left) + 125, y = parseFloat(el.style.top) + 42;
+    Object.assign(cam, { rx: 0, ry: 0, zoom: S / fit, px: (narrow ? 0 : rtl ? 170 : -170) - S * (x - W / 2), py: (narrow ? -h * 0.3 : 0) - S * (y - H / 2) });
+  };
+  const resize = () => { box.classList.toggle("nt-narrow", box.clientWidth <= 760); fit = Math.min(box.clientWidth / (W + 120), box.clientHeight / (H + 110), 1.2); const a = box.querySelector(".nt-role.active"); if (a) aim(a); draw(); };
+  const fill = (el) => {
+    const g = phases[el.dataset.g], nd = g.needs.find((x) => x.id === el.dataset.need), pin = PINS.find((p) => p.need_id === nd.id);
+    const dropped = NT.dropped.has(nd.id), lv = level(nd.importance);
+    const row = (k, v) => `<div><dt>${k}</dt><dd>${v}</dd></div>`;
+    panel.innerHTML = `<p>${esc(tm("PHASES", g.phase) || "")}</p><h3>${esc(nd.role)}</h3>
+      <dl>${row(T("tree.period"), nd.phase_window ? `<bdi>${fmtDate(nd.phase_window[0])} ${T("arrow")} ${fmtDate(nd.phase_window[1])}</bdi>` : "—")}
+        ${row(T("tree.level"), T("tree.lvl." + lv))}
+        ${row(T("tree.source"), nd.mentioned ? T("tree.mentioned") : T("tree.inferred"))}
+        ${row(T("tree.place"), nd.remote_ok ? T("tree.yes") : T("tree.no"))}
+        ${pin ? row(T("tree.pinned"), esc(pinName(pin))) : ""}
+        ${row(T("tree.imp"), `${num(pct(nd.importance))}%`)}</dl>
+      <div class="nt-bar"><i></i></div>
+      ${nd.reason ? `<p class="nt-why">${esc(nd.reason)}</p>` : ""}
+      ${nd.consequence_if_ignored ? `<p class="nt-risk">${T("tree.risk")} ${esc(nd.consequence_if_ignored)}</p>` : ""}
+      <div class="nt-actions"><button type="button" class="nt-drop${dropped ? " on" : ""}">${dropped ? T("tree.restore") : T("tree.drop")}</button>
+        <button type="button" class="nt-back">${T("tree.back")}</button></div>`;
+    requestAnimationFrame(() => requestAnimationFrame(() => { const b = panel.querySelector(".nt-bar i"); if (b) b.style.width = pct(nd.importance) + "%"; }));
+    panel.querySelector(".nt-back").onclick = () => release();
+    panel.querySelector(".nt-drop").onclick = () => {
+      const on = !NT.dropped.has(nd.id); on ? NT.dropped.add(nd.id) : NT.dropped.delete(nd.id);
+      el.classList.toggle("dropped", on);
+      const cb = $$("#needs .drop").find((x) => x.value === nd.id); if (cb) cb.checked = on;
+      fill(el);
+    };
+  };
+  const focusRole = (el) => {
+    const cur = box.querySelector(".nt-role.active");
+    if (!cur) NT.saved = { ...cam }; else cur.classList.remove("active");
+    el.classList.add("active"); NT.active = el.dataset.need; tree.classList.add("focused"); fly(); aim(el); draw();
+    fill(el); panel.classList.add("open");
+  };
+  function release(restore = true) {
+    const cur = box.querySelector(".nt-role.active"); if (!cur) return;
+    cur.classList.remove("active"); NT.active = null; tree.classList.remove("focused"); panel.classList.remove("open");
+    if (restore && NT.saved) { fly(); Object.assign(cam, NT.saved); draw(); }
+  }
+  const tap = (el) => {
+    if (!el) return release();
+    if (el.classList.contains("nt-role")) return el.classList.contains("active") ? release() : focusRole(el);
+    release();
+    if (el.classList.contains("nt-root")) NT.rootClosed = !NT.rootClosed; else { const p = phases[el.dataset.g].phase; NT.closed[p] = !NT.closed[p]; }
+    sync();
+  };
+  const gesture = () => { const p = [...points.values()];
+    return p.length > 1 ? { x: (p[0].x + p[1].x) / 2, y: (p[0].y + p[1].y) / 2, d: Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y), n: 2 } : { ...p[0], n: 1 }; };
+  const outside = (e) => e.target.closest(".nt-panel,.nt-ctl");
+  box.addEventListener("pointerdown", (e) => {
+    if (outside(e) || (e.button !== 0 && e.button !== 2)) return;
+    press = points.size ? null : { id: e.pointerId, x: e.clientX, y: e.clientY, el: e.target.closest(".nt-node"), button: e.button };
+    points.set(e.pointerId, { x: e.clientX, y: e.clientY }); tree.classList.remove("fly");
+    box.setPointerCapture(e.pointerId); previous = gesture(); box.focus({ preventScroll: true });
+  });
+  box.addEventListener("pointermove", (e) => {
+    if (!points.has(e.pointerId)) return;
+    points.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (press && Math.hypot(e.clientX - press.x, e.clientY - press.y) < 7) return;
+    press = null; release(false);
+    const now = gesture();
+    if (previous && previous.n === now.n) {
+      const dx = now.x - previous.x, dy = now.y - previous.y;
+      if (now.n === 2) { if (previous.d > 0) cam.zoom = ntClamp(cam.zoom * now.d / previous.d, 0.4, 4); cam.px += dx; cam.py += dy; }
+      else if (e.shiftKey || e.buttons === 2) { cam.px += dx; cam.py += dy; }
+      else { cam.ry = ntClamp(cam.ry + dx * 0.15, -45, 45); cam.rx = ntClamp(cam.rx - dy * 0.15, -35, 45); }
+      draw();
+    }
+    previous = now;
+  });
+  box.addEventListener("pointerup", (e) => { if (press && press.id === e.pointerId && press.button === 0) tap(press.el); press = null; });
+  box.addEventListener("pointercancel", () => (press = null));
+  for (const ev of ["pointerup", "pointercancel", "lostpointercapture"]) box.addEventListener(ev, (e) => { points.delete(e.pointerId); previous = points.size ? gesture() : null; });
+  // plain wheel keeps scrolling the page; Ctrl/⌘ + wheel (and trackpad pinch) zooms the tree
+  box.addEventListener("wheel", (e) => { if (!e.ctrlKey && !e.metaKey) return; e.preventDefault(); release(false); tree.classList.remove("fly");
+    cam.zoom = ntClamp(cam.zoom * Math.exp(-e.deltaY * 0.002), 0.4, 4); draw(); }, { passive: false });
+  box.addEventListener("contextmenu", (e) => { if (!outside(e)) e.preventDefault(); });
+  box.addEventListener("pointerdown", (e) => { if (e.detail < 2) lastNode = !!e.target.closest(".nt-node,.nt-panel,.nt-ctl"); }, true);
+  box.addEventListener("dblclick", () => { if (!lastNode) { release(false); fly(); reset(); } });
+  box.querySelector(".nt-ctl").addEventListener("click", (e) => {
+    const z = e.target.closest("[data-ntz]")?.dataset.ntz; if (!z) return;
+    release(false); fly();
+    if (z === "reset") reset(); else { cam.zoom = ntClamp(cam.zoom * (z === "in" ? 1.25 : 0.8), 0.4, 4); draw(); }
+  });
+  box.addEventListener("keydown", (e) => {
+    if (outside(e)) return;
+    const node = e.target.closest(".nt-node");
+    if (node && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); return tap(node); }
+    if (e.key === "Escape") return release();
+    const k = { ArrowLeft: () => (cam.ry = ntClamp(cam.ry - 3, -45, 45)), ArrowRight: () => (cam.ry = ntClamp(cam.ry + 3, -45, 45)),
+      ArrowUp: () => (cam.rx = ntClamp(cam.rx + 3, -35, 45)), ArrowDown: () => (cam.rx = ntClamp(cam.rx - 3, -35, 45)),
+      "+": () => (cam.zoom = ntClamp(cam.zoom * 1.1, 0.4, 4)), "=": () => (cam.zoom = ntClamp(cam.zoom * 1.1, 0.4, 4)),
+      "-": () => (cam.zoom = ntClamp(cam.zoom / 1.1, 0.4, 4)), "0": reset }[e.key];
+    if (k) { e.preventDefault(); release(false); k(); draw(); }
+  });
+  NT.resize = resize;
+  sync(); resize();
+  const again = NT.active && box.querySelector(`.nt-role[data-need="${CSS.escape(NT.active)}"]`);
+  if (again && !again.classList.contains("off")) { const back = NT.saved; focusRole(again); NT.saved = back || NT.saved; } else NT.active = null;
+}
+window.addEventListener("resize", () => { if (!$("#needsSec").classList.contains("hidden")) NT.resize?.(); });
 
 // ---------------------------------------------------------------- 3) pin editor (needs step + What-If bar)
 function renderPinHosts() { $$("[data-pinhost]").forEach(renderPinHost); $("#wiPinCount").textContent = PINS.length ? `(${num(PINS.length)})` : ""; }
@@ -923,7 +1086,7 @@ async function whatIf(opts = {}) {
   else if (opts.pins && S) { PINS = (S.pins || []).map((p) => ({ ...p })); renderPinHosts(); renderNeeds(S); }  // server refused: revert
 }
 function reset() {
-  S = null; PINS = []; ADV_SEEN = 0; $("#chat").innerHTML = ""; chips([]); $("#input").value = "";
+  S = null; PINS = []; ADV_SEEN = 0; Object.assign(NT, { camera: null, saved: null, closed: {}, rootClosed: false, dropped: new Set(), active: null }); $("#chat").innerHTML = ""; chips([]); $("#input").value = "";
   ["#needsSec", "#teamSec", "#error"].forEach((s) => $(s).classList.add("hidden"));
   $("#pinBoxWIWrap").hidden = true; $$("[data-pinhost]").forEach((h) => { h.innerHTML = ""; delete h.dataset.sel; });
   $("#latency").textContent = ""; $("#statusPill").textContent = tm("STATUS", "clarifying");
@@ -978,7 +1141,6 @@ document.addEventListener("focusin", async (e) => {
   if (e.target.matches?.(".pin-q")) { await loadPrs(); renderPinResults(e.target.closest("[data-pinhost]")); }
 });
 document.addEventListener("change", (e) => {
-  if (e.target.matches(".drop")) e.target.closest(".leaf")?.classList.toggle("is-dropped", e.target.checked);
   if (e.target.matches(".card-date")) editCard(e.target.dataset.card, e.target.value);
   if (e.target.matches(".pin-role")) { const h = e.target.closest("[data-pinhost]"); if (h?.querySelector(".pin-q") && !h.querySelector(".pin-results").hidden) renderPinResults(h); }
 });

@@ -6,6 +6,13 @@
       "runtimeExecutable": ".cache/venv/Scripts/python",
       "runtimeArgs": ["-m", "uvicorn", "wasl.api:app", "--app-dir", "src", "--port", "8000"],
       "port": 8000
+    },
+    {
+      "name": "wasl-lite",
+      "runtimeExecutable": ".cache/venv/Scripts/python",
+      "runtimeArgs": ["-m", "uvicorn", "wasl.api:app", "--app-dir", "src", "--port", "8000"],
+      "env": { "WASL_PRELOAD": "0" },
+      "port": 8000
     }
   ]
 }
